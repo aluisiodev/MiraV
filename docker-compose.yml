@@ -1,0 +1,28 @@
+# Ambiente local: PostgreSQL + API em Go.
+# Uso: docker compose up --build   (o site roda à parte com "npm run dev" em web/)
+services:
+  banco:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: mirav
+      POSTGRES_PASSWORD: mirav
+      POSTGRES_DB: mirav
+    ports: ["5432:5432"]
+    volumes: [dados:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mirav"]
+      interval: 3s
+      retries: 10
+
+  api:
+    build: ./api
+    env_file: ./api/.env
+    environment:
+      DATABASE_URL: postgres://mirav:mirav@banco:5432/mirav?sslmode=disable
+      TRUST_PROXY: "false"
+    ports: ["8080:8080"]
+    depends_on:
+      banco: { condition: service_healthy }
+
+volumes:
+  dados:

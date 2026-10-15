@@ -1,0 +1,16 @@
+# dependências e builds
+web/node_modules/
+web/.next/
+web/out/
+web/next-env.d.ts
+web/tsconfig.tsbuildinfo
+api/server
+api/api
+
+# segredos
+.env
+.env.local
+**/.env
+!**/.env.example
+
+.DS_Store

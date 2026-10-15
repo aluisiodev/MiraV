@@ -1,0 +1,183 @@
+@import "tailwindcss";
+
+/* Identidade MiraV · Paleta A "Ouro clássico" · par de fontes 1 */
+@theme {
+  --color-fundo: #0b0b0c;
+  --color-superficie: #17171a;
+  --color-superficie-2: #1e1e22;
+  --color-linha: #2b2b30;
+  --color-linha-forte: #3a3a40;
+  --color-texto: #f4f1ea;
+  --color-texto-2: #c9c5bc;
+  --color-apagado: #a8a49b;
+  --color-ouro: #e0b23b;
+  --color-ouro-escuro: #8a6a1f;
+
+  --font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Cormorant Garamond", ui-serif, Georgia, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-marca: "Cinzel", ui-serif, serif;
+}
+
+@layer base {
+  html {
+    background: var(--color-fundo);
+    color: var(--color-texto);
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+  body {
+    font-family: var(--font-sans);
+    background: var(--color-fundo);
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+  ::selection {
+    background: var(--color-ouro);
+    color: var(--color-fundo);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-ouro);
+    outline-offset: 3px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+}
+
+@layer components {
+  .rotulo {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-apagado);
+  }
+  .destaque {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 1.15em;
+    color: var(--color-ouro);
+  }
+  .btn-ouro {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 48px;
+    padding: 0 24px;
+    background: var(--color-ouro);
+    color: var(--color-fundo);
+    font-weight: 600;
+    font-size: 15px;
+    border-radius: 2px;
+    transition: background 0.2s, transform 0.2s;
+  }
+  .btn-ouro:hover {
+    background: var(--color-texto);
+  }
+  .btn-ouro:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .btn-linha {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 48px;
+    padding: 0 24px;
+    border: 1px solid var(--color-ouro-escuro);
+    color: var(--color-texto);
+    font-weight: 500;
+    font-size: 15px;
+    border-radius: 2px;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .btn-linha:hover {
+    border-color: var(--color-ouro);
+    color: var(--color-ouro);
+  }
+  .campo {
+    width: 100%;
+    min-height: 48px;
+    padding: 12px 14px;
+    background: var(--color-superficie);
+    border: 1px solid var(--color-linha-forte);
+    border-radius: 2px;
+    color: var(--color-texto);
+    font-size: 16px; /* 16px evita o zoom automático no iPhone */
+  }
+  .campo:focus {
+    outline: none;
+    border-color: var(--color-ouro);
+  }
+  .campo[aria-invalid="true"] {
+    border-color: #e5484d;
+  }
+  .selo-demo {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-ouro);
+    border: 1px dashed var(--color-ouro-escuro);
+    padding: 4px 8px;
+    border-radius: 2px;
+  }
+}
+
+/* ---------- Movimento ---------- */
+@keyframes mv-piscar {
+  0%, 82%, 100% { transform: scaleY(1); }
+  88% { transform: scaleY(0.05); }
+}
+@keyframes mv-apagar {
+  0%, 82%, 100% { opacity: 1; }
+  88% { opacity: 0.55; }
+}
+@keyframes mv-barra {
+  0% { width: 0; }
+  100% { width: 100%; }
+}
+@keyframes mv-pulso {
+  0% { transform: scale(1); opacity: 0.7; }
+  100% { transform: scale(1.18); opacity: 0; }
+}
+@keyframes mv-digitando {
+  0%, 80%, 100% { opacity: 0.25; }
+  40% { opacity: 1; }
+}
+
+.olho-pisca {
+  transform-origin: 50% 65.2%;
+}
+.barra-carga {
+  width: 60%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .olho-pisca { animation: mv-piscar 3.2s ease-in-out infinite; }
+  .raios-pisca { animation: mv-apagar 3.2s ease-in-out infinite; }
+  .barra-carga { width: 0; animation: mv-barra 2.6s cubic-bezier(0.6, 0, 0.2, 1) infinite; }
+  .pulso { animation: mv-pulso 1.8s ease-out infinite; }
+  .digitando span { animation: mv-digitando 1.2s infinite; }
+  .digitando span:nth-child(2) { animation-delay: 0.15s; }
+  .digitando span:nth-child(3) { animation-delay: 0.3s; }
+
+  .revelar {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.8s cubic-bezier(0.2, 0.7, 0.2, 1), transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .revelar.visivel {
+    opacity: 1;
+    transform: none;
+  }
+}

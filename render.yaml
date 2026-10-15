@@ -1,0 +1,22 @@
+# Blueprint do Render (plano gratuito) para a API em Go.
+# O banco fica no Neon (gratuito e sem prazo de expiração): cole a URL em DATABASE_URL.
+services:
+  - type: web
+    name: visavision-api
+    runtime: docker
+    rootDir: api
+    plan: free
+    healthCheckPath: /saude
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: IP_SALT
+        generateValue: true
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: DEMO_FALLBACK
+        value: "true"
