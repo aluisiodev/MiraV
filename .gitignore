@@ -14,3 +14,7 @@ api/api
 !**/.env.example
 
 .DS_Store
+
+# Cloudflare (wrangler)
+.wrangler/
+web/.wrangler/

@@ -1,0 +1,14 @@
+// Publicação no Cloudflare (Workers com arquivos estáticos).
+// O site é exportado como HTML fixo em "out" (npm run build); o Cloudflare só serve esses arquivos.
+// Sem este arquivo, o "npx wrangler deploy" tenta converter o projeto para rodar o Next no servidor e falha.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "mirav",
+  "compatibility_date": "2026-10-19",
+  "assets": {
+    "directory": "./out",
+    // /sobre abre out/sobre/index.html; endereço inexistente mostra a página 404 do site
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page"
+  }
+}
