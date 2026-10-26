@@ -3,9 +3,12 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { useIdioma } from "@/lib/i18n";
-import { FORMATOS, IconeEspelho } from "./FormatoEspelho";
+import { PalcoProduto, useProdutoAtivo } from "./AssistenteProduto";
+import { FORMATOS } from "./FormatoEspelho";
 import { Formulario } from "./Formulario";
 import { Revelar } from "./Revelar";
+import { RadarDiretoria } from "./RadarDiretoria";
+import { ListaVagas } from "./Vagas";
 
 function Abertura({ rotulo, titulo, destaque, texto, children }: { rotulo: string; titulo: string; destaque: string; texto: string; children?: ReactNode }) {
   return (
@@ -25,6 +28,8 @@ function Abertura({ rotulo, titulo, destaque, texto, children }: { rotulo: strin
 export function ProdutosConteudo() {
   const { t } = useIdioma();
   const p = t.produtos;
+  // qual produto está com o Miro (robozinho) falando: components/AssistenteProduto.tsx
+  const { ativo, props } = useProdutoAtivo();
   return (
     <>
       <Abertura rotulo={p.rotulo} titulo={p.titulo} destaque={p.destaque} texto={p.texto} />
@@ -32,10 +37,12 @@ export function ProdutosConteudo() {
         <div className="flex flex-col border-t border-linha">
           {FORMATOS.map((f, i) => (
             <Revelar key={f} como="article">
-              <div id={f} className="grid scroll-mt-24 gap-8 border-b border-linha py-12 md:grid-cols-[220px_1fr_auto] md:items-center">
-                <div className="flex h-56 items-center justify-center border border-linha bg-superficie">
-                  <IconeEspelho formato={f} ativo className="h-40 w-auto" />
-                </div>
+              <div
+                id={f}
+                {...props(f)}
+                className="grid scroll-mt-24 gap-8 border-b border-linha py-12 md:grid-cols-[minmax(0,340px)_1fr] md:items-center lg:grid-cols-[360px_1fr_auto]"
+              >
+                <PalcoProduto formato={f} ativo={ativo === f} />
                 <div className="flex flex-col gap-4">
                   <span className="font-mono text-xs tracking-[0.16em] text-apagado">0{i + 1}</span>
                   <h2 className="text-4xl font-medium tracking-tight">{t.modelos.nomes[f]}</h2>
@@ -51,7 +58,7 @@ export function ProdutosConteudo() {
                     </div>
                   </dl>
                 </div>
-                <Link href={`/contato/?modelo=${f}`} className="btn-linha self-start md:self-center">
+                <Link href={`/contato/?modelo=${f}`} className="btn-linha self-start md:col-start-2 md:justify-self-start lg:col-start-auto lg:self-center">
                   {p.cta} →
                 </Link>
               </div>
@@ -64,7 +71,7 @@ export function ProdutosConteudo() {
         <div className="mt-8 grid gap-px border border-linha bg-linha sm:grid-cols-2 lg:grid-cols-4">
           {p.recursos.map((r, i) => (
             <Revelar key={i} atraso={i * 80} className="flex flex-col gap-3 bg-fundo p-6">
-              <span className="font-serif text-4xl text-ouro italic">0{i + 1}</span>
+              <span className="font-serif text-4xl text-azul italic">0{i + 1}</span>
               <span className="text-lg font-medium">{r.titulo}</span>
               <p className="text-[15px] leading-relaxed text-texto-2">{r.texto}</p>
             </Revelar>
@@ -73,13 +80,6 @@ export function ProdutosConteudo() {
       </section>
     </>
   );
-}
-
-const EQUIPE = ["Aluísio Alves", "Luan Sousa", "Luiz Felipe", "Caio", "Livia Felix", "Ryan"];
-
-function iniciais(nome: string) {
-  const partes = nome.split(" ");
-  return (partes[0][0] + (partes[1]?.[0] ?? partes[0][1] ?? "")).toUpperCase();
 }
 
 export function SobreConteudo() {
@@ -103,39 +103,33 @@ export function SobreConteudo() {
           <span className="rotulo">{s.equipeTitulo}</span>
           <h2 className="text-[clamp(32px,4vw,52px)] font-medium tracking-tight">{s.equipeTexto}</h2>
         </Revelar>
-        <ul className="mt-12 grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {EQUIPE.map((nome, i) => (
-            <Revelar como="li" key={nome} atraso={i * 70} className="flex flex-col gap-5 border border-linha p-5 sm:p-6">
-              <span
-                aria-hidden
-                className="flex aspect-square w-full items-center justify-center border border-ouro-escuro bg-superficie font-serif text-[clamp(48px,7vw,88px)] text-ouro italic"
-              >
-                {iniciais(nome)}
-              </span>
-              <span className="text-lg font-medium">{nome}</span>
-            </Revelar>
-          ))}
-        </ul>
+        {/* diretoria em volta da logo: components/RadarDiretoria.tsx */}
+        <div className="mt-12">
+          <RadarDiretoria />
+        </div>
       </section>
     </>
   );
 }
 
-function PaginaFormulario({ tipo, rotulo, titulo, destaque, texto, placeholder }: {
+function PaginaFormulario({ tipo, rotulo, titulo, destaque, texto, placeholder, nivel = "h1" }: {
   tipo: "contato" | "candidaturas";
   rotulo: string;
   titulo: string;
   destaque: string;
   texto: string;
   placeholder: string;
+  /** h1 quando o formulário é o título da página; h2 quando vem depois de outra seção. */
+  nivel?: "h1" | "h2";
 }) {
+  const Titulo = nivel;
   return (
     <section className="mx-auto grid w-full max-w-[1280px] gap-12 px-4 pt-14 pb-24 sm:px-8 sm:pt-24 lg:grid-cols-[1fr_1.15fr]">
       <Revelar className="flex flex-col gap-6">
         <span className="rotulo">{rotulo}</span>
-        <h1 className="text-[clamp(40px,5.4vw,76px)] leading-[1] font-medium tracking-[-0.03em]">
-          {titulo} <span className="destaque">{destaque}</span>
-        </h1>
+        <Titulo className={`${nivel === "h1" ? "text-[clamp(40px,5.4vw,76px)]" : "text-[clamp(32px,4vw,56px)]"} leading-[1] font-medium tracking-[-0.03em]`}>
+          {titulo} {destaque && <span className="destaque">{destaque}</span>}
+        </Titulo>
         <p className="max-w-[46ch] text-lg leading-relaxed text-texto-2">{texto}</p>
       </Revelar>
       <Revelar atraso={120}>
@@ -151,10 +145,27 @@ export function ContatoConteudo() {
   return <PaginaFormulario tipo="contato" rotulo={c.rotulo} titulo={c.titulo} destaque={c.destaque} texto={c.texto} placeholder={c.placeholderMensagem} />;
 }
 
+// Trabalhe Conosco: abertura, lista de vagas (components/Vagas.tsx) e o formulário de candidatura.
 export function TrabalheConteudo() {
   const { t } = useIdioma();
   const c = t.trabalhe;
-  return <PaginaFormulario tipo="candidaturas" rotulo={c.rotulo} titulo={c.titulo} destaque={c.destaque} texto={c.texto} placeholder={c.placeholderMensagem} />;
+  return (
+    <>
+      <Abertura rotulo={c.rotulo} titulo={c.titulo} destaque={c.destaque} texto={c.texto} />
+      <ListaVagas />
+      <section id="candidatura" className="scroll-mt-24 border-t border-linha">
+        <PaginaFormulario
+          tipo="candidaturas"
+          rotulo={c.rotulo}
+          titulo={c.candidaturaTitulo}
+          destaque=""
+          texto={c.candidaturaTexto}
+          placeholder={c.placeholderMensagem}
+          nivel="h2"
+        />
+      </section>
+    </>
+  );
 }
 
 export function NaoEncontradaConteudo() {
@@ -164,7 +175,7 @@ export function NaoEncontradaConteudo() {
       <span className="rotulo">404</span>
       <h1 className="text-[clamp(40px,6vw,84px)] leading-none font-medium tracking-tight">{t.naoEncontrada.titulo}</h1>
       <p className="text-lg text-texto-2">{t.naoEncontrada.texto}</p>
-      <Link href="/" className="btn-ouro">
+      <Link href="/" className="btn-azul">
         {t.naoEncontrada.voltar}
       </Link>
     </section>

@@ -1,4 +1,5 @@
-// Package httpapi expõe a API REST usada pelo site.
+// Package httpapi expõe a API REST usada pelo site: saúde do serviço e os formulários
+// de Contato e Trabalhe Conosco.
 package httpapi
 
 import (
@@ -16,55 +17,33 @@ import (
 
 	"github.com/mirav/visavision-api/internal/db"
 	"github.com/mirav/visavision-api/internal/limite"
-	"github.com/mirav/visavision-api/internal/llm"
 )
 
 // Banco é o que a API precisa do PostgreSQL (permite testar sem banco).
 type Banco interface {
 	Ping(ctx context.Context) error
-	Espelhos(ctx context.Context) ([]db.Espelho, error)
-	Cortes(ctx context.Context, espelhoSlug string) ([]db.Corte, error)
-	AnaliseEmCache(ctx context.Context, sha, idioma string, espelhoID int, validade time.Duration) (*db.Analise, error)
-	SalvarAnalise(ctx context.Context, a db.Analise) (int64, error)
 	SalvarLead(ctx context.Context, l db.Lead) (int64, error)
-}
-
-// Analisador é a IA (ou um dublê nos testes).
-type Analisador interface {
-	Analisar(ctx context.Context, p llm.Pedido) (llm.Resultado, error)
 }
 
 type Config struct {
 	OrigensPermitidas []string // "*" libera tudo (só para desenvolvimento)
 	ConfiarProxy      bool     // ler o IP de X-Forwarded-For (Render, Koyeb etc.)
 	SalIP             string   // usado para anonimizar o IP gravado nos formulários
-	ValidadeCache     time.Duration
-	TamanhoMaxFoto    int64
 }
 
 type Servidor struct {
 	banco    Banco
-	ia       Analisador
 	cfg      Config
 	log      *slog.Logger
-	limIA    *limite.Limitador
 	limForm  *limite.Limitador
 	limGeral *limite.Limitador
 }
 
-func Novo(banco Banco, ia Analisador, cfg Config, log *slog.Logger) *Servidor {
-	if cfg.ValidadeCache == 0 {
-		cfg.ValidadeCache = 30 * 24 * time.Hour
-	}
-	if cfg.TamanhoMaxFoto == 0 {
-		cfg.TamanhoMaxFoto = 8 << 20
-	}
+func Novo(banco Banco, cfg Config, log *slog.Logger) *Servidor {
 	return &Servidor{
 		banco:    banco,
-		ia:       ia,
 		cfg:      cfg,
 		log:      log,
-		limIA:    limite.Novo(5, 6), // 5 seguidas, depois 6 por minuto
 		limForm:  limite.Novo(3, 2), // formulários: 3 seguidos, depois 2 por minuto
 		limGeral: limite.Novo(60, 120),
 	}
@@ -73,10 +52,8 @@ func Novo(banco Banco, ia Analisador, cfg Config, log *slog.Logger) *Servidor {
 // Handler devolve o roteador com os middlewares aplicados.
 func (s *Servidor) Handler() http.Handler {
 	mux := http.NewServeMux()
+	mux.HandleFunc("GET /vivo", s.vivo)
 	mux.HandleFunc("GET /saude", s.saude)
-	mux.HandleFunc("GET /v1/espelhos", s.listarEspelhos)
-	mux.HandleFunc("GET /v1/cortes", s.listarCortes)
-	mux.HandleFunc("POST /v1/analises", s.analisar)
 	mux.HandleFunc("POST /v1/contato", s.contato)
 	mux.HandleFunc("POST /v1/candidaturas", s.candidatura)
 	return s.cors(s.seguranca(mux))
@@ -167,15 +144,9 @@ func (s *Servidor) muitasRequisicoes(w http.ResponseWriter, r *http.Request, esp
 	s.falha(w, r, http.StatusTooManyRequests, "limite", nil)
 }
 
-// idiomaDe lê ?idioma=, depois o campo do formulário, depois Accept-Language.
+// idiomaDe lê ?idioma= e depois Accept-Language.
 func idiomaDe(r *http.Request) string {
-	cands := []string{r.URL.Query().Get("idioma")}
-	if r.MultipartForm != nil {
-		if v := r.MultipartForm.Value["idioma"]; len(v) > 0 {
-			cands = append(cands, v[0])
-		}
-	}
-	cands = append(cands, r.Header.Get("Accept-Language"))
+	cands := []string{r.URL.Query().Get("idioma"), r.Header.Get("Accept-Language")}
 	for _, c := range cands {
 		c = strings.ToLower(strings.TrimSpace(c))
 		if len(c) >= 2 {
@@ -190,6 +161,13 @@ func idiomaDe(r *http.Request) string {
 
 // ---------- rotas ----------
 
+// vivo responde sem consultar o banco. O Render usa esta rota para saber se a API está no ar,
+// e o site chama para "acordar" a API. Assim o banco (Neon) pode dormir quando ninguém usa,
+// o que economiza as horas grátis de processamento.
+func (s *Servidor) vivo(w http.ResponseWriter, r *http.Request) {
+	escreverJSON(w, http.StatusOK, map[string]any{"ok": true})
+}
+
 func (s *Servidor) saude(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
 	defer cancel()
@@ -199,80 +177,6 @@ func (s *Servidor) saude(w http.ResponseWriter, r *http.Request) {
 		status = http.StatusServiceUnavailable
 	}
 	escreverJSON(w, status, map[string]any{"ok": bancoOK, "banco": bancoOK, "servico": "visavision-api"})
-}
-
-type corteDTO struct {
-	Slug              string `json:"slug"`
-	Nome              string `json:"nome"`
-	Descricao         string `json:"descricao,omitempty"`
-	ComoPedir         string `json:"como_pedir,omitempty"`
-	Comprimento       string `json:"comprimento,omitempty"`
-	ManutencaoSemanas int    `json:"manutencao_semanas,omitempty"`
-}
-
-type espelhoDTO struct {
-	Slug      string     `json:"slug"`
-	Formato   string     `json:"formato"`
-	Nome      string     `json:"nome"`
-	Descricao string     `json:"descricao"`
-	Indicado  string     `json:"indicado"`
-	Medidas   string     `json:"medidas,omitempty"`
-	Destaques []corteDTO `json:"destaques"`
-}
-
-func corteCompleto(c db.Corte, idioma string) corteDTO {
-	return corteDTO{
-		Slug: c.Slug, Nome: c.Nome.Em(idioma), Descricao: c.Descricao.Em(idioma),
-		ComoPedir: c.ComoPedir.Em(idioma), Comprimento: c.Comprimento, ManutencaoSemanas: c.ManutencaoSemanas,
-	}
-}
-
-func (s *Servidor) listarEspelhos(w http.ResponseWriter, r *http.Request) {
-	idioma := idiomaDe(r)
-	espelhos, err := s.banco.Espelhos(r.Context())
-	if err != nil {
-		s.erroInterno(w, r, "listar espelhos", err)
-		return
-	}
-	cortes, err := s.banco.Cortes(r.Context(), "")
-	if err != nil {
-		s.erroInterno(w, r, "listar cortes", err)
-		return
-	}
-	porSlug := map[string]db.Corte{}
-	for _, c := range cortes {
-		porSlug[c.Slug] = c
-	}
-	lista := make([]espelhoDTO, 0, len(espelhos))
-	for _, e := range espelhos {
-		d := espelhoDTO{
-			Slug: e.Slug, Formato: e.Formato, Nome: e.Nome.Em(idioma), Descricao: e.Descricao.Em(idioma),
-			Indicado: e.Indicado.Em(idioma), Medidas: e.Medidas, Destaques: []corteDTO{},
-		}
-		for _, slug := range e.Destaques {
-			if c, ok := porSlug[slug]; ok {
-				d.Destaques = append(d.Destaques, corteDTO{Slug: c.Slug, Nome: c.Nome.Em(idioma)})
-			}
-		}
-		lista = append(lista, d)
-	}
-	w.Header().Set("Cache-Control", "public, max-age=300")
-	escreverJSON(w, http.StatusOK, map[string]any{"espelhos": lista})
-}
-
-func (s *Servidor) listarCortes(w http.ResponseWriter, r *http.Request) {
-	idioma := idiomaDe(r)
-	cortes, err := s.banco.Cortes(r.Context(), r.URL.Query().Get("espelho"))
-	if err != nil {
-		s.erroInterno(w, r, "listar cortes", err)
-		return
-	}
-	lista := make([]corteDTO, 0, len(cortes))
-	for _, c := range cortes {
-		lista = append(lista, corteCompleto(c, idioma))
-	}
-	w.Header().Set("Cache-Control", "public, max-age=300")
-	escreverJSON(w, http.StatusOK, map[string]any{"cortes": lista})
 }
 
 func (s *Servidor) erroInterno(w http.ResponseWriter, r *http.Request, onde string, err error) {

@@ -8,9 +8,11 @@ Projeto acadêmico. A apresentação é em **29/10/2026**. Todo o projeto roda *
 
 | Pasta | O que é | Tecnologia |
 |---|---|---|
-| `web/` | Site: home, Produtos, Sobre, Contato, Trabalhe Conosco, página secreta `/espelho` e tela do QR code `/qr` | Next.js 16 (TypeScript, Tailwind 4), exportado como site estático |
-| `api/` | API: formulários, catálogo de espelhos e cortes, análise da foto com IA | Go 1.24 (só biblioteca padrão + `lib/pq`) |
-| `api/internal/db/migrations/` | Tabelas e catálogo inicial (5 espelhos, 24 cortes em PT/EN/ES) | PostgreSQL 16 |
+| `web/` | Site: home (com o espelho interativo e o Miro), Produtos, Sobre, Contato, Trabalhe Conosco (com as vagas) e a tela do QR code `/qr` | Next.js 16 (TypeScript, Tailwind 4, three.js), exportado como site estático |
+| `api/` | API: recebe os formulários de Contato e Trabalhe Conosco | Go 1.24 (só biblioteca padrão + `lib/pq`) |
+| `api/internal/db/migrations/` | Tabela dos formulários | PostgreSQL 16 |
+
+> Até 25/10/2026 o site tinha uma página `/espelho` em que uma IA dizia o nome do corte a partir de uma foto. Ela foi retirada antes da publicação para simplificar o projeto. O código antigo continua no primeiro commit do Git.
 
 ---
 
@@ -23,7 +25,7 @@ Você precisa de **Go 1.24+**, **Node 20+** e **PostgreSQL 16** (ou Docker).
 Com Docker (mais simples):
 
 ```bash
-cp api/.env.example api/.env      # preencha ao menos uma chave de IA (opcional)
+cp api/.env.example api/.env
 docker compose up --build         # sobe PostgreSQL e API em http://localhost:8080
 ```
 
@@ -36,11 +38,10 @@ export $(grep -v '^#' .env | xargs)
 go run ./cmd/server
 ```
 
-A API cria as tabelas e o catálogo sozinha na primeira execução. Teste com:
+A API cria a tabela sozinha na primeira execução. Teste com:
 
 ```bash
 curl http://localhost:8080/saude
-curl "http://localhost:8080/v1/espelhos?idioma=pt"
 ```
 
 ### 2. Site
@@ -52,41 +53,15 @@ npm install
 npm run dev                       # http://localhost:3000
 ```
 
-Páginas: `/`, `/produtos/`, `/sobre/`, `/contato/`, `/trabalhe-conosco/`.
-Fora do menu e sem indexação no Google: `/espelho/` (Como funciona) e `/qr/` (tela do telão).
+Páginas: `/`, `/produtos/`, `/sobre/`, `/contato/`, `/trabalhe-conosco/` (e uma página para cada vaga).
+Fora do menu: `/qr/`, a tela do telão, com um QR code que leva à home.
 
 ### 3. Testes
 
 ```bash
-cd api && go test ./...           # API: IA, imagem, limites, formulários, CORS
+cd api && go test ./...           # API: formulários, limites de envio, CORS
 cd web && npm run lint && npm run build
 ```
-
----
-
-## IA gratuita
-
-A API conversa com qualquer provedor compatível com a API da OpenAI. Basta **uma** chave; se houver várias, ela tenta na ordem de `LLM_ORDER` e passa para a próxima quando uma falha ou estoura o limite gratuito.
-
-| Provedor | Variáveis | Onde pegar a chave |
-|---|---|---|
-| Groq (principal) | `GROQ_API_KEY`, `GROQ_MODEL` | console.groq.com → API Keys |
-| Google Gemini (reserva) | `GEMINI_API_KEY`, `GEMINI_MODEL` | aistudio.google.com → Get API key |
-| OpenRouter (opcional) | `OPENROUTER_API_KEY`, `OPENROUTER_MODEL` | openrouter.ai → Keys (use um modelo de visão `:free`) |
-| Ollama (offline, no notebook) | `OLLAMA_URL`, `OLLAMA_MODEL` | `ollama pull qwen3-vl:8b` |
-
-Os nomes de modelo padrão estão no `.env.example`. Antes da apresentação, confira na página de cada provedor se o modelo de visão ainda está disponível no plano gratuito.
-
-**Plano B:** com `DEMO_FALLBACK=true`, se nenhuma IA responder, a API devolve um resultado simulado. O site mostra o selo "Resultado de demonstração".
-
-**Como a análise funciona:**
-1. O site reduz a foto no próprio celular (até 1024 px, em JPEG). Os metadados, como a localização GPS, são descartados.
-2. A API decodifica e recodifica a imagem de novo, por segurança. Depois calcula o SHA-256.
-3. Se a mesma foto já foi analisada, a resposta sai do cache, sem gastar cota.
-4. O prompt manda a IA escolher **somente** cortes do catálogo do banco e responder em JSON. Qualquer slug inventado é descartado.
-5. O banco guarda **só o resultado**, nunca a foto.
-
-Há limite de uso por visitante: 5 análises seguidas e depois 6 por minuto. Os formulários permitem 3 envios seguidos e depois 2 por minuto.
 
 ---
 
@@ -103,19 +78,15 @@ Depois de publicar o site, coloque a URL dele em `ALLOWED_ORIGINS` na API. É o 
 ### Checklist do dia 29/10
 
 - [ ] Acordar a API (`/saude`) e o banco 10 minutos antes.
-- [ ] Abrir `/qr/` no telão; testar o QR com dois celulares diferentes.
-- [ ] Testar `/espelho/` com uma foto real em PT, EN e ES.
-- [ ] Ter o Ollama rodando no notebook e `LLM_ORDER=groq,gemini,ollama` como reserva.
-- [ ] Se tudo falhar, a demonstração simulada continua funcionando.
+- [ ] Abrir `/qr/` no telão e testar o QR com dois celulares diferentes.
+- [ ] Testar a home, o espelho interativo e o Miro em PT, EN e ES.
+- [ ] Enviar um formulário de teste em Contato e conferir se chegou no banco.
+- [ ] Ver em `chrome://gpu` se o computador do telão tem aceleração de hardware (senão o espelho usa a versão CSS).
 
 ---
 
 ## Banco de dados
 
-- `espelhos`: os 5 modelos (Retangular, Oval, Arco, Redondo, Personalizado), com textos em PT/EN/ES em JSONB.
-- `cortes`: 24 cortes com nome, descrição e "como pedir ao profissional" nos três idiomas.
-- `espelho_cortes`: catálogo de cada modelo e os cortes de destaque mostrados em `/espelho`.
-- `analises`: resultado de cada análise e o hash da foto (a foto não é guardada).
 - `leads`: formulários de Contato e Trabalhe Conosco, com o IP anonimizado por hash.
 
 Para ver os formulários recebidos:
@@ -129,22 +100,21 @@ SELECT tipo, nome, email, tipo_negocio, area, mensagem, criado_em FROM leads ORD
 | Método | Rota | Corpo |
 |---|---|---|
 | GET | `/saude` | |
-| GET | `/v1/espelhos?idioma=pt` | |
-| GET | `/v1/cortes?idioma=pt&espelho=oval` | |
-| POST | `/v1/analises` | `multipart/form-data`: `foto`, `espelho`, `idioma` |
 | POST | `/v1/contato` | JSON: `nome`, `email`, `telefone?`, `empresa?`, `tipo_negocio?`, `mensagem`, `consentimento`, `idioma` |
 | POST | `/v1/candidaturas` | JSON: `nome`, `email`, `telefone?`, `area`, `link?`, `mensagem`, `consentimento`, `idioma` |
 
-Os erros vêm com `erro` (código), `mensagem` (no idioma pedido) e `campos` (o que está inválido).
+Os erros vêm com `erro` (código), `mensagem` (no idioma pedido) e `campos` (o que está inválido). Os formulários aceitam 3 envios seguidos e depois 2 por minuto, por visitante.
 
 ## Identidade
 
-Paleta A, "Ouro clássico": `#0B0B0C` fundo, `#17171A` superfícies, `#F4F1EA` texto, `#E0B23B` ouro e `#8A6A1F` ouro escuro.
+Paleta azul da marca, com dois temas: **claro** (padrão) e **escuro marinho**, trocados pelo botão de lua/sol no cabeçalho. Azul principal `#0C67F1`, azul escuro `#0846A4`, ciano `#01A9DB`, marinho `#0A1D39` (texto) e `#00102A` (fundo do tema escuro). As cores ficam em `web/src/app/globals.css`.
 
-Fontes: Space Grotesk (títulos e texto), Cormorant Garamond itálico (destaques), JetBrains Mono (rótulos) e Cinzel (palavra MIRAV no carregamento).
+Fontes: Space Grotesk (títulos e texto), Cormorant Garamond itálico (destaques), JetBrains Mono (rótulos) e Cinzel (palavra MIRAV).
 
-Logo: no site aparece o **olho da logo original**. Nas telas de carregamento, que têm animação, entra a **logo simplificada**.
+Logo: no site aparece o **olho da logo azul**. Nas telas de carregamento entra a versão simplificada.
 
-Números, casos e a conversa da home são **simulados** e sinalizados assim no site.
+**Miro:** o robozinho em pixel art da MiraV. Na home ele explica o espelho e cada seção; em Produtos, conta onde cada espelho fica melhor.
 
-Equipe: Aluísio Alves, Luan Sousa, Luiz Felipe, Caio, Livia Felix e Ryan.
+Os números da home aparecem como estimativas da MiraV, e os casos como exemplos de uso.
+
+Equipe: Luan Sousa (CEO), Aluísio Alves (CTO), Caio (COO), Ryan (CFO) e Livia Felix (CMO). Site desenvolvido por Aluísio Alves.

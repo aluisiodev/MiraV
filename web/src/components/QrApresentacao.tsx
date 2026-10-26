@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useIdioma } from "@/lib/i18n";
 import { LogoOlho } from "./Cabecalho";
 
-// Tela para o telão: QR code grande que leva à página secreta /espelho.
+// Tela para o telão: QR code grande que leva à página inicial do site.
 export function QrApresentacao() {
   const { t } = useIdioma();
   const [svg, setSvg] = useState("");
@@ -13,9 +13,9 @@ export function QrApresentacao() {
 
   useEffect(() => {
     const base = (process.env.NEXT_PUBLIC_SITE_URL || window.location.origin).replace(/\/+$/, "");
-    const url = `${base}/espelho/`;
+    const url = `${base}/`;
     setEndereco(url.replace(/^https?:\/\//, ""));
-    QRCode.toString(url, { type: "svg", margin: 1, errorCorrectionLevel: "M", color: { dark: "#0B0B0C", light: "#F4F1EA" } }).then(setSvg);
+    QRCode.toString(url, { type: "svg", margin: 2, errorCorrectionLevel: "M", color: { dark: "#0A1D39", light: "#FFFFFF" } }).then(setSvg);
   }, []);
 
   return (
@@ -24,7 +24,7 @@ export function QrApresentacao() {
         <LogoOlho altura={64} />
       </div>
       <div
-        className="aspect-square w-[min(56vh,80vw)] border border-ouro-escuro bg-texto p-4"
+        className="aspect-square w-[min(56vh,80vw)] border border-azul-escuro bg-white p-4"
         role="img"
         aria-label={endereco}
         dangerouslySetInnerHTML={{ __html: svg }}

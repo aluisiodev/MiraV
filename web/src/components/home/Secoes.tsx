@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useIdioma } from "@/lib/i18n";
 import { FORMATOS, IconeEspelho } from "../FormatoEspelho";
+import { MiroGuia } from "../MiroGuia";
 import { Revelar, useVisivel } from "../Revelar";
 import { EspelhoInterativo } from "./EspelhoInterativo";
 
@@ -21,6 +22,9 @@ function Titulo({ rotulo, numero, titulo, destaque }: { rotulo: string; numero: 
 }
 
 const secao = "mx-auto w-full max-w-[1280px] px-4 sm:px-8";
+// seções com o Miro: "relative" para posicioná-lo e "overflow-x-clip" para ele entrar
+// voando ou espiando sem criar rolagem lateral
+const comMiro = "relative overflow-x-clip";
 
 /* 01 · Hero com o espelho interativo */
 export function Hero() {
@@ -35,7 +39,7 @@ export function Hero() {
           </h1>
           <p className="max-w-[520px] text-lg leading-relaxed text-texto-2">{t.hero.texto}</p>
           <div className="flex flex-wrap gap-3">
-            <Link href="/contato/" className="btn-ouro">
+            <Link href="/contato/" className="btn-azul">
               {t.hero.ctaPrincipal}
             </Link>
             <Link href="/produtos/" className="btn-linha">
@@ -90,13 +94,14 @@ export function Manifesto() {
   }, []);
 
   return (
-    <section ref={ref} className={`${secao} py-28 sm:py-40`} aria-label={t.manifesto.rotulo}>
+    <section ref={ref} className={`${secao} ${comMiro} py-28 sm:py-40`} aria-label={t.manifesto.rotulo}>
+      <MiroGuia falas={t.miro.falas.manifesto} lado="direita" efeito="espiar" className="miro-topo-dentro" />
       <span className="rotulo">02 · {t.manifesto.rotulo}</span>
       <p className="mt-8 font-serif text-[clamp(44px,7.4vw,112px)] leading-[1.02] font-normal tracking-[-0.01em] italic">
         {palavras.map((p, i) => {
           const aceso = progresso * palavras.length > i;
           return (
-            <span key={i} className="transition-colors duration-300" style={{ color: aceso ? "#E0B23B" : "#34332F" }}>
+            <span key={i} className="transition-colors duration-300" style={{ color: aceso ? "var(--color-azul)" : "var(--color-linha-forte)" }}>
               {p}{" "}
             </span>
           );
@@ -148,15 +153,13 @@ export function Resultados() {
   const ref = useRef<HTMLDivElement>(null);
   const visivel = useVisivel(ref);
   return (
-    <section className={`${secao} py-24`}>
-      <div className="flex flex-wrap items-end justify-between gap-6">
-        <Titulo numero="03" rotulo={t.resultados.rotulo} titulo={t.resultados.titulo} destaque={t.resultados.destaque} />
-        <span className="selo-demo">{t.demo}</span>
-      </div>
+    <section className={`${secao} ${comMiro} py-24`}>
+      <MiroGuia falas={t.miro.falas.resultados} lado="esquerda" efeito="teletransporte" />
+      <Titulo numero="03" rotulo={t.resultados.rotulo} titulo={t.resultados.titulo} destaque={t.resultados.destaque} />
       <div ref={ref} className="mt-14 grid grid-cols-1 gap-px border border-linha bg-linha sm:grid-cols-2 lg:grid-cols-4">
         {t.resultados.itens.map((item, i) => (
           <div key={i} className="flex flex-col gap-3 bg-fundo p-6 sm:p-8">
-            <span className="text-[clamp(52px,6vw,80px)] leading-none font-medium tracking-[-0.03em] text-ouro">
+            <span className="text-[clamp(52px,6vw,80px)] leading-none font-medium tracking-[-0.03em] text-azul">
               <Contador valor={item.valor} prefixo={item.prefixo} sufixo={item.sufixo} ativo={visivel} />
             </span>
             <span className="max-w-[24ch] text-[15px] leading-snug text-texto-2">{item.texto}</span>
@@ -173,7 +176,8 @@ export function Publico() {
   const { t } = useIdioma();
   const [ativo, setAtivo] = useState(0);
   return (
-    <section className={`${secao} py-24`}>
+    <section className={`${secao} ${comMiro} py-24`}>
+      <MiroGuia falas={t.miro.falas.publico} lado="direita" efeito="voar" />
       <Titulo numero="04" rotulo={t.publico.rotulo} titulo={t.publico.titulo} destaque={t.publico.destaque} />
       <div className="mt-14 flex flex-col gap-3 lg:h-[440px] lg:flex-row">
         {t.publico.itens.map((item, i) => {
@@ -183,7 +187,7 @@ export function Publico() {
               key={i}
               onMouseEnter={() => setAtivo(i)}
               className={`group relative flex min-w-0 flex-col overflow-hidden border transition-all duration-500 ease-[cubic-bezier(.2,.7,.2,1)] ${
-                aberto ? "border-ouro-escuro bg-superficie lg:flex-[2.6]" : "border-linha bg-fundo lg:flex-1"
+                aberto ? "border-azul-escuro bg-superficie lg:flex-[2.6]" : "border-linha bg-fundo lg:flex-1"
               }`}
             >
               <button
@@ -195,10 +199,10 @@ export function Publico() {
               >
                 <span className="font-mono text-xs tracking-[0.16em] text-apagado">0{i + 1}</span>
                 <span className="flex flex-col gap-2 lg:mt-auto">
-                  <span className={`text-2xl font-medium tracking-tight ${aberto ? "text-ouro" : ""}`}>{item.nome}</span>
+                  <span className={`text-2xl font-medium tracking-tight ${aberto ? "text-azul" : ""}`}>{item.nome}</span>
                   <span className={`text-[15px] text-texto-2 ${aberto ? "" : "lg:hidden"}`}>{item.resumo}</span>
                 </span>
-                <span aria-hidden className={`text-2xl text-ouro transition-transform lg:hidden ${aberto ? "rotate-45" : ""}`}>
+                <span aria-hidden className={`text-2xl text-azul transition-transform lg:hidden ${aberto ? "rotate-45" : ""}`}>
                   +
                 </span>
               </button>
@@ -234,13 +238,13 @@ export function Fluxo() {
   }, [automatico, visivel, etapas.length]);
 
   return (
-    <section className={`${secao} py-24`}>
+    <section className={`${secao} ${comMiro} py-24`}>
+      <MiroGuia falas={t.miro.falas.fluxo} lado="esquerda" efeito="surgir" />
       <Titulo numero="05" rotulo={t.fluxo.rotulo} titulo={t.fluxo.titulo} destaque={t.fluxo.destaque} />
-      <p className="mt-4 text-sm text-apagado">{t.fluxo.instrucao}</p>
       <div ref={ref} className="mt-12">
         <ol className="relative grid grid-cols-1 gap-3 md:grid-cols-5 md:gap-0">
           <div aria-hidden className="absolute top-7 right-[10%] left-[10%] hidden h-px bg-linha-forte md:block">
-            <div className="h-px bg-ouro transition-all duration-700" style={{ width: `${(ativo / (etapas.length - 1)) * 100}%` }} />
+            <div className="h-px bg-azul transition-all duration-700" style={{ width: `${(ativo / (etapas.length - 1)) * 100}%` }} />
           </div>
           {etapas.map((e, i) => {
             const feito = i <= ativo;
@@ -257,19 +261,19 @@ export function Fluxo() {
                 >
                   <span
                     className={`relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-full border font-mono text-sm transition-colors duration-500 ${
-                      i === ativo ? "border-ouro bg-ouro text-fundo" : feito ? "border-ouro bg-fundo text-ouro" : "border-linha-forte bg-fundo text-apagado"
+                      i === ativo ? "border-azul bg-azul text-sobre-azul" : feito ? "border-azul bg-fundo text-azul" : "border-linha-forte bg-fundo text-apagado"
                     }`}
                   >
                     0{i + 1}
                   </span>
-                  <span className={`text-lg font-medium transition-colors ${i === ativo ? "text-ouro" : ""}`}>{e.nome}</span>
+                  <span className={`text-lg font-medium transition-colors ${i === ativo ? "text-azul" : ""}`}>{e.nome}</span>
                 </button>
               </li>
             );
           })}
         </ol>
         <div className="mt-10 grid gap-6 border border-linha bg-superficie p-6 sm:p-10 md:grid-cols-[auto_1fr] md:items-center" aria-live="polite">
-          <span className="font-serif text-[88px] leading-none text-ouro italic">0{ativo + 1}</span>
+          <span className="font-serif text-[88px] leading-none text-azul italic">0{ativo + 1}</span>
           <div className="flex flex-col gap-2">
             <span className="text-2xl font-medium tracking-tight">{etapas[ativo].nome}</span>
             <p className="max-w-[60ch] text-[17px] leading-relaxed text-texto-2">{etapas[ativo].texto}</p>
@@ -280,17 +284,18 @@ export function Fluxo() {
   );
 }
 
-/* 06 · Casos simulados e uma conversa de atendimento */
+/* 06 · Casos (exemplos de uso) e uma conversa de atendimento */
 export function Casos() {
   const { t } = useIdioma();
   const [caso, setCaso] = useState(0);
   const itens = t.casos.itens;
   const atual = itens[caso];
   return (
-    <section className={`${secao} py-24`}>
+    <section className={`${secao} ${comMiro} py-24`}>
+      <MiroGuia falas={t.miro.falas.casos} lado="direita" efeito="pousar" />
       <div className="flex flex-wrap items-end justify-between gap-6">
         <Titulo numero="06" rotulo={t.casos.rotulo} titulo={t.casos.titulo} destaque={t.casos.destaque} />
-        <span className="selo-demo">{t.casos.nota}</span>
+        <span className="rotulo">{t.casos.nota}</span>
       </div>
       <div className="mt-14 grid gap-6 lg:grid-cols-[1.25fr_1fr]">
         <article className="flex flex-col justify-between gap-10 border border-linha bg-superficie p-6 sm:p-10" aria-live="polite">
@@ -301,7 +306,7 @@ export function Casos() {
           </div>
           <div className="flex flex-wrap items-end justify-between gap-6">
             <div className="flex flex-col gap-1">
-              <span className="text-[56px] leading-none font-medium tracking-[-0.03em] text-ouro">{atual.numero}</span>
+              <span className="text-[56px] leading-none font-medium tracking-[-0.03em] text-azul">{atual.numero}</span>
               <span className="text-sm text-apagado">{atual.numeroTexto}</span>
             </div>
             <div className="flex items-center gap-2">
@@ -312,7 +317,7 @@ export function Casos() {
                 type="button"
                 aria-label={t.casos.anterior}
                 onClick={() => setCaso((c) => (c - 1 + itens.length) % itens.length)}
-                className="flex h-12 w-12 cursor-pointer items-center justify-center border border-linha-forte transition-colors hover:border-ouro hover:text-ouro"
+                className="flex h-12 w-12 cursor-pointer items-center justify-center border border-linha-forte transition-colors hover:border-azul hover:text-azul"
               >
                 ←
               </button>
@@ -320,7 +325,7 @@ export function Casos() {
                 type="button"
                 aria-label={t.casos.proximo}
                 onClick={() => setCaso((c) => (c + 1) % itens.length)}
-                className="flex h-12 w-12 cursor-pointer items-center justify-center border border-linha-forte transition-colors hover:border-ouro hover:text-ouro"
+                className="flex h-12 w-12 cursor-pointer items-center justify-center border border-linha-forte transition-colors hover:border-azul hover:text-azul"
               >
                 →
               </button>
@@ -353,7 +358,7 @@ function Conversa() {
 
   const estilo: Record<string, string> = {
     cliente: "self-end bg-superficie-2 border-linha-forte",
-    espelho: "self-start border-ouro-escuro bg-fundo",
+    espelho: "self-start border-azul-escuro bg-fundo",
     profissional: "self-start border-linha bg-superficie",
   };
   const quem: Record<string, string> = { cliente: "Cliente", espelho: "VisaVision", profissional: "Pro" };
@@ -364,7 +369,7 @@ function Conversa() {
       <div className="mt-2 flex flex-1 flex-col gap-3" aria-live="polite">
         {msgs.slice(0, mostradas).map((m, i) => (
           <div key={i} className={`max-w-[85%] border px-4 py-3 text-[15px] leading-snug ${estilo[m.de]}`}>
-            <span className={`mb-1 block font-mono text-[10px] tracking-[0.16em] uppercase ${m.de === "espelho" ? "text-ouro" : "text-apagado"}`}>
+            <span className={`mb-1 block font-mono text-[10px] tracking-[0.16em] uppercase ${m.de === "espelho" ? "text-azul" : "text-apagado"}`}>
               {quem[m.de]}
             </span>
             {m.texto}
@@ -372,9 +377,9 @@ function Conversa() {
         ))}
         {mostradas < msgs.length && (
           <div className="digitando flex gap-1 self-start px-2 py-3" aria-hidden>
-            <span className="h-1.5 w-1.5 rounded-full bg-ouro" />
-            <span className="h-1.5 w-1.5 rounded-full bg-ouro" />
-            <span className="h-1.5 w-1.5 rounded-full bg-ouro" />
+            <span className="h-1.5 w-1.5 rounded-full bg-azul" />
+            <span className="h-1.5 w-1.5 rounded-full bg-azul" />
+            <span className="h-1.5 w-1.5 rounded-full bg-azul" />
           </div>
         )}
       </div>
@@ -386,7 +391,8 @@ function Conversa() {
 export function Modelos() {
   const { t } = useIdioma();
   return (
-    <section className={`${secao} py-24`}>
+    <section className={`${secao} ${comMiro} py-24`}>
+      <MiroGuia falas={t.miro.falas.modelos} lado="esquerda" efeito="voar" />
       <div className="flex flex-wrap items-end justify-between gap-6">
         <Titulo numero="07" rotulo={t.modelos.rotulo} titulo={t.modelos.titulo} destaque={t.modelos.destaque} />
         <Link href="/produtos/" className="btn-linha">
@@ -398,7 +404,7 @@ export function Modelos() {
           <Revelar key={f} atraso={i * 80}>
             <Link
               href={`/produtos/#${f}`}
-              className="group flex h-full flex-col items-center gap-6 border border-linha p-6 transition-colors hover:border-ouro-escuro hover:bg-superficie"
+              className="group flex h-full flex-col items-center gap-6 border border-linha p-6 transition-colors hover:border-azul-escuro hover:bg-superficie"
             >
               <IconeEspelho formato={f} className="h-36 w-auto transition-transform duration-500 group-hover:scale-105" />
               <span className="flex w-full flex-wrap items-center justify-between gap-x-3 gap-y-1">
@@ -417,15 +423,16 @@ export function Modelos() {
 export function Chamada() {
   const { t } = useIdioma();
   return (
-    <section className={`${secao} py-28 sm:py-40`}>
-      <Revelar className="flex flex-col items-start gap-8 border-t border-ouro-escuro pt-12">
+    <section className={`${secao} ${comMiro} py-28 sm:py-40`}>
+      <MiroGuia falas={t.miro.falas.chamada} lado="direita" efeito="surgir" />
+      <Revelar className="flex flex-col items-start gap-8 border-t border-azul-escuro pt-12">
         <span className="rotulo">08</span>
         <h2 className="text-[clamp(48px,8vw,128px)] leading-[0.98] font-medium tracking-[-0.035em]">
           {t.chamada.titulo} <span className="destaque">{t.chamada.destaque}</span>
         </h2>
         <div className="flex w-full flex-wrap items-center justify-between gap-6">
           <p className="text-lg text-texto-2">{t.chamada.texto}</p>
-          <Link href="/contato/" className="btn-ouro">
+          <Link href="/contato/" className="btn-azul">
             {t.chamada.cta} →
           </Link>
         </div>

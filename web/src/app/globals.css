@@ -1,22 +1,53 @@
 @import "tailwindcss";
 
-/* Identidade MiraV · Paleta A "Ouro clássico" · par de fontes 1 */
+/* Identidade MiraV · paleta azul da marca (slides de out/2026) · par de fontes 1
+   Dois temas:
+   - CLARO (padrão): os valores do @theme abaixo.
+   - ESCURO (marinho): os mesmos nomes, redefinidos em :root[data-tema="escuro"].
+   O Tailwind transforma cada --color-x em classes (bg-x, text-x, border-x...). Como as classes
+   leem a variável, trocar o valor dela troca a cor do site inteiro, sem mexer nos componentes. */
 @theme {
-  --color-fundo: #0b0b0c;
-  --color-superficie: #17171a;
-  --color-superficie-2: #1e1e22;
-  --color-linha: #2b2b30;
-  --color-linha-forte: #3a3a40;
-  --color-texto: #f4f1ea;
-  --color-texto-2: #c9c5bc;
-  --color-apagado: #a8a49b;
-  --color-ouro: #e0b23b;
-  --color-ouro-escuro: #8a6a1f;
+  --color-fundo: #ffffff;
+  --color-superficie: #f2f6fc;
+  --color-superficie-2: #e8eef8;
+  --color-linha: #dce4f0;
+  --color-linha-forte: #c3cee0;
+  --color-texto: #0a1d39;
+  --color-texto-2: #3b4862;
+  --color-apagado: #5a6680;
+  --color-azul: #0c67f1; /* azul principal da marca ("Vision" no título dos slides) */
+  --color-azul-escuro: #0846a4; /* molduras e contornos */
+  --color-ciano: #01a9db; /* brilho de destaque (linha com estrela dos slides) */
+  --color-sobre-azul: #ffffff; /* texto em cima de um fundo azul (botões) */
+  --color-erro: #d92d3a;
+  --color-erro-texto: #b42318;
 
   --font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Cormorant Garamond", ui-serif, Georgia, serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
   --font-marca: "Cinzel", ui-serif, serif;
+}
+
+/* Tema escuro: marinho do último slide. O azul fica mais claro para ter contraste no fundo escuro. */
+:root[data-tema="escuro"] {
+  --color-fundo: #00102a;
+  --color-superficie: #071c3d;
+  --color-superficie-2: #0c2549;
+  --color-linha: #17305a;
+  --color-linha-forte: #26446f;
+  --color-texto: #eef4ff;
+  --color-texto-2: #b7c4db;
+  --color-apagado: #8c9dbb;
+  --color-azul: #4d97ff;
+  --color-azul-escuro: #2a63c4;
+  --color-ciano: #37c9ef;
+  --color-sobre-azul: #00102a;
+  --color-erro: #e5484d;
+  --color-erro-texto: #ffb3b5;
+  color-scheme: dark;
+}
+:root {
+  color-scheme: light;
 }
 
 @layer base {
@@ -29,15 +60,16 @@
   body {
     font-family: var(--font-sans);
     background: var(--color-fundo);
+    transition: background-color 0.3s ease, color 0.3s ease; /* troca de tema suave */
     min-height: 100dvh;
     overflow-x: hidden;
   }
   ::selection {
-    background: var(--color-ouro);
-    color: var(--color-fundo);
+    background: var(--color-azul);
+    color: var(--color-sobre-azul);
   }
   :focus-visible {
-    outline: 2px solid var(--color-ouro);
+    outline: 2px solid var(--color-azul);
     outline-offset: 3px;
   }
   @media (prefers-reduced-motion: reduce) {
@@ -60,26 +92,26 @@
     font-style: italic;
     font-weight: 400;
     font-size: 1.15em;
-    color: var(--color-ouro);
+    color: var(--color-azul);
   }
-  .btn-ouro {
+  .btn-azul {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
     min-height: 48px;
     padding: 0 24px;
-    background: var(--color-ouro);
-    color: var(--color-fundo);
+    background: var(--color-azul);
+    color: var(--color-sobre-azul);
     font-weight: 600;
     font-size: 15px;
     border-radius: 2px;
     transition: background 0.2s, transform 0.2s;
   }
-  .btn-ouro:hover {
+  .btn-azul:hover {
     background: var(--color-texto);
   }
-  .btn-ouro:disabled {
+  .btn-azul:disabled {
     opacity: 0.5;
     cursor: not-allowed;
   }
@@ -90,7 +122,7 @@
     gap: 8px;
     min-height: 48px;
     padding: 0 24px;
-    border: 1px solid var(--color-ouro-escuro);
+    border: 1px solid var(--color-azul-escuro);
     color: var(--color-texto);
     font-weight: 500;
     font-size: 15px;
@@ -98,8 +130,8 @@
     transition: border-color 0.2s, color 0.2s;
   }
   .btn-linha:hover {
-    border-color: var(--color-ouro);
-    color: var(--color-ouro);
+    border-color: var(--color-azul);
+    color: var(--color-azul);
   }
   .campo {
     width: 100%;
@@ -113,10 +145,10 @@
   }
   .campo:focus {
     outline: none;
-    border-color: var(--color-ouro);
+    border-color: var(--color-azul);
   }
   .campo[aria-invalid="true"] {
-    border-color: #e5484d;
+    border-color: var(--color-erro);
   }
   .selo-demo {
     display: inline-flex;
@@ -126,8 +158,8 @@
     font-size: 11px;
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: var(--color-ouro);
-    border: 1px dashed var(--color-ouro-escuro);
+    color: var(--color-azul);
+    border: 1px dashed var(--color-azul-escuro);
     padding: 4px 8px;
     border-radius: 2px;
   }
@@ -180,4 +212,446 @@
     opacity: 1;
     transform: none;
   }
+}
+
+/* Reserva em CSS da revelação do espelho (sem WebGL). As variáveis vêm do JavaScript. */
+.revelacao-css {
+  position: absolute;
+  inset: 0;
+  -webkit-mask-image: radial-gradient(circle var(--r, 1px) at var(--x, 50%) var(--y, 30%), #000 55%, transparent 100%);
+  mask-image: radial-gradient(circle var(--r, 1px) at var(--x, 50%) var(--y, 30%), #000 55%, transparent 100%);
+}
+.revelacao-css img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.6s ease;
+}
+
+/* ---------- Radar da diretoria (página Sobre, components/RadarDiretoria.tsx) ----------
+   Unidade cqw = 1% da largura do radar (container query). Assim tudo escala junto,
+   do celular ao telão, sem JavaScript medindo nada. */
+.radar {
+  --r: 38cqw; /* raio da órbita da diretoria */
+  --tam: clamp(52px, 14cqw, 100px); /* tamanho de cada foto */
+  --giro: 0deg; /* quanto a órbita já girou: atualizado pelo JavaScript (RadarDiretoria.tsx) */
+  position: relative;
+  width: 100%;
+  max-width: 760px;
+  aspect-ratio: 1;
+  margin: 0 auto 36px; /* espaço para o nome de quem passa embaixo */
+  container-type: inline-size;
+}
+.radar-anel {
+  position: absolute;
+  inset: calc(50cqw - var(--raio));
+  border-radius: 50%;
+  border: 1px solid var(--color-linha);
+  pointer-events: none;
+}
+.radar-anel-tracejado {
+  border-style: dashed;
+  border-color: var(--color-linha-forte);
+}
+/* A varredura é um recorte redondo; quem gira é o desenho dentro dele (::before).
+   Assim o giro não passa das bordas da tela. */
+.radar-varredura {
+  position: absolute;
+  inset: 1.5cqw;
+  overflow: hidden;
+  border-radius: 50%;
+  pointer-events: none;
+  -webkit-mask-image: radial-gradient(circle, transparent 12cqw, #000 12.5cqw);
+  mask-image: radial-gradient(circle, transparent 12cqw, #000 12.5cqw);
+}
+.radar-varredura::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: conic-gradient(from 0deg, transparent 0deg 300deg, color-mix(in srgb, var(--color-azul) var(--forca-varredura, 13%), transparent) 360deg);
+}
+:root[data-tema="escuro"] .radar-varredura::before {
+  --forca-varredura: 26%; /* no fundo escuro a luz pode ser mais forte */
+}
+.radar-pulso {
+  position: absolute;
+  inset: calc(50cqw - 12cqw);
+  border-radius: 50%;
+  border: 1px solid var(--color-azul);
+  opacity: 0;
+  pointer-events: none;
+}
+/* A órbita é um ponto sem tamanho no centro: ela gira e leva junto o que está "pendurado" nela.
+   (Uma caixa quadrada girando passaria das bordas e criaria rolagem lateral no celular.) */
+.radar-orbita {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.radar-ponto {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  border-radius: 50%;
+  background: var(--color-ciano);
+  box-shadow: 0 0 10px var(--color-ciano);
+  transform: rotate(var(--a)) translateX(var(--raio));
+}
+.radar-raio {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--r);
+  height: 1px;
+  transform-origin: 0 50%;
+  transform: rotate(calc(var(--a) + var(--giro)));
+  background: linear-gradient(90deg, transparent 12cqw, var(--color-linha-forte));
+  transition: background 0.3s;
+}
+.radar-raio.ativo {
+  height: 2px;
+  background: linear-gradient(90deg, transparent 12cqw, var(--color-azul));
+}
+.radar-planeta {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--tam);
+  height: var(--tam);
+  margin: calc(var(--tam) / -2) 0 0 calc(var(--tam) / -2);
+  /* leva para o ângulo (lugar da pessoa + giro da órbita), empurra até a órbita e desfaz o giro:
+     assim a pessoa fica sempre "em pé" */
+  transform: rotate(calc(var(--a) + var(--giro))) translateX(var(--r)) rotate(calc((var(--a) + var(--giro)) * -1));
+  pointer-events: auto;
+}
+.radar-planeta.arrastando {
+  z-index: 3; /* quem está sendo arrastado passa por cima dos outros */
+}
+.radar-rosto {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  cursor: grab;
+  touch-action: none; /* no celular, arrastar o dedo move a pessoa em vez de rolar a página */
+}
+.radar[data-arrastando],
+.radar[data-arrastando] .radar-rosto {
+  cursor: grabbing;
+}
+.radar-avatar {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 50%;
+  border: 2px solid var(--color-linha-forte);
+  background: var(--color-superficie);
+  font-size: calc(var(--tam) * 0.3);
+  transition: transform 0.3s ease, border-color 0.3s, box-shadow 0.3s;
+}
+.radar-rosto:hover .radar-avatar,
+.radar-rosto:focus-visible .radar-avatar {
+  transform: scale(1.08);
+  border-color: var(--color-azul);
+}
+.radar-rosto[aria-pressed="true"] .radar-avatar {
+  border-color: var(--color-azul);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-azul) 25%, transparent), 0 0 30px color-mix(in srgb, var(--color-azul) 45%, transparent);
+}
+.radar-legenda {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.25;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.radar-centro {
+  position: absolute;
+  inset: calc(50cqw - 12cqw);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.4cqw;
+  border-radius: 50%;
+  border: 1px solid var(--color-azul-escuro);
+  background: radial-gradient(circle at 50% 35%, var(--color-superficie), var(--color-fundo));
+  box-shadow: 0 0 60px color-mix(in srgb, var(--color-azul) 28%, transparent);
+}
+.radar-olho {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@keyframes radar-girar {
+  to { transform: rotate(360deg); }
+}
+@keyframes radar-pulsar {
+  0% { transform: scale(1); opacity: 0.55; }
+  100% { transform: scale(3.9); opacity: 0; }
+}
+@keyframes radar-surgir {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .radar-pontos-1 { animation: radar-girar 34s linear infinite reverse; }
+  .radar-pontos-2 { animation: radar-girar 120s linear infinite; }
+  .radar-varredura::before { animation: radar-girar 7s linear infinite; }
+  .radar-pulso { animation: radar-pulsar 5s ease-out infinite; }
+  .radar-pulso-2 { animation-delay: 2.5s; }
+  .radar-olho { animation: mv-piscar 4.2s ease-in-out infinite; }
+  .radar-painel { animation: radar-surgir 0.35s ease both; }
+}
+
+/* ---------- Miro, o robozinho da página Produtos (AssistenteProduto.tsx e RoboMirav.tsx) ---------- */
+.palco-espelho {
+  transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.palco[data-ativo="true"] .palco-espelho {
+  transform: translateX(-30%) scale(0.92); /* o espelho dá lugar ao robô */
+}
+.palco-robo {
+  position: absolute;
+  right: 18px;
+  bottom: -4px;
+  width: 96px; /* 24 pixels × 4: múltiplo inteiro deixa o pixel art nítido */
+  height: 144px;
+  transform-origin: 50% 100%;
+  transform: translateY(105%);
+  opacity: 0;
+  transition: transform 0.2s ease-in, opacity 0.2s;
+  pointer-events: none;
+}
+.palco[data-ativo="true"] .palco-robo {
+  transform: none;
+  opacity: 1;
+}
+.balao-pixel {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: min(232px, calc(100% - 28px));
+  padding: 8px 11px 10px;
+  background: var(--color-fundo);
+  color: var(--color-texto);
+  border: 3px solid var(--color-texto);
+  box-shadow: 4px 4px 0 var(--color-azul); /* sombra dura, sem desfoque: cara de pixel */
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.45;
+  transform-origin: 75% 100%;
+  transform: scale(0.6) translateY(8px);
+  opacity: 0;
+  transition: opacity 0.12s, transform 0.12s;
+  pointer-events: none;
+}
+/* rabinho do balão em "escadinha" de pixels, apontando para o robô */
+.balao-pixel::after {
+  content: "";
+  position: absolute;
+  right: 46px;
+  bottom: -12px;
+  width: 12px;
+  height: 9px;
+  background: var(--color-texto);
+  clip-path: polygon(0 0, 100% 0, 100% 34%, 66% 34%, 66% 67%, 33% 67%, 33% 100%, 0 100%);
+}
+.palco[data-ativo="true"] .balao-pixel {
+  transform: none;
+  opacity: 1;
+  transition: opacity 0.12s 0.3s, transform 0.24s steps(3) 0.3s;
+}
+.balao-cursor {
+  margin-left: 1px;
+  color: var(--color-azul);
+}
+.robo-contorno {
+  fill: #0a1d39;
+}
+:root[data-tema="escuro"] .robo-contorno {
+  fill: #4d97ff; /* no fundo marinho, o contorno marinho sumiria */
+}
+.robo-olho-fechado,
+.robo-peito {
+  opacity: 0;
+}
+@keyframes robo-surgir {
+  0% { transform: translateY(100%) scale(0.5); }
+  55% { transform: translateY(-10%) scale(1.08); }
+  80% { transform: translateY(2%) scale(0.98); }
+  100% { transform: none; }
+}
+@keyframes robo-flutuar {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+@keyframes robo-aberto {
+  0%, 91%, 100% { opacity: 1; }
+  93%, 97% { opacity: 0; }
+}
+@keyframes robo-fechado {
+  0%, 91%, 100% { opacity: 0; }
+  93%, 97% { opacity: 1; }
+}
+@keyframes robo-piscar {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  /* surge de repente, com um quique, e depois flutua em "pulinhos" de 1 pixel */
+  .palco[data-ativo="true"] .palco-robo {
+    animation: robo-surgir 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) both, robo-flutuar 1.4s steps(1, end) 0.6s infinite;
+  }
+  .robo-olho-aberto { animation: robo-aberto 4s steps(1, end) infinite; }
+  .robo-olho-fechado { animation: robo-fechado 4s steps(1, end) infinite; }
+  .robo-pontas { animation: robo-piscar 1.2s steps(1, end) infinite; }
+  .robo.falando .robo-peito { animation: robo-piscar 0.24s steps(1, end) infinite; }
+  .balao-cursor { animation: robo-piscar 0.6s steps(1, end) infinite; }
+}
+
+/* ---------- Miro guia da home (MiroGuia.tsx) ----------
+   Ele fica no espaço entre as seções ("canto") ou dentro do conteúdo ("linha", no espelho do topo).
+   --dir vale -1 à esquerda e 1 à direita: as animações usam para entrar pelo lado certo. */
+.miro-guia {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  pointer-events: none;
+}
+.miro-esquerda { --dir: -1; }
+.miro-direita { --dir: 1; flex-direction: row-reverse; }
+.miro-canto {
+  position: absolute;
+  z-index: 5;
+  top: -44px; /* sobe para o espaço vazio entre esta seção e a anterior */
+}
+.miro-canto.miro-esquerda { left: 16px; }
+.miro-canto.miro-direita { right: 16px; }
+@media (min-width: 640px) {
+  .miro-canto.miro-esquerda { left: 32px; }
+  .miro-canto.miro-direita { right: 32px; }
+}
+.miro-canto.miro-topo-dentro { top: 8px; } /* quando a seção anterior não tem espaço embaixo */
+.miro-linha {
+  position: relative;
+  align-items: flex-end;
+  min-height: 120px;
+}
+.miro-botao {
+  flex-shrink: 0;
+  width: 72px; /* 24 pixels × 3 */
+  height: 120px; /* 40 pixels × 3 (com o espaço das chamas) */
+  cursor: pointer;
+  pointer-events: auto;
+  transform-origin: 50% 100%;
+}
+.miro-robo {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.miro-guia[data-estado="escondido"] .miro-botao {
+  visibility: hidden;
+}
+.robo-fogo {
+  opacity: 0;
+}
+.robo.voando .robo-fogo {
+  opacity: 1;
+}
+/* balão ao lado do robô, com o rabinho em escadinha apontando para ele */
+.balao-guia {
+  position: relative;
+  margin-top: 8px;
+  width: max-content;
+  max-width: min(300px, calc(100vw - 132px));
+  padding: 8px 11px 10px;
+  background: var(--color-fundo);
+  color: var(--color-texto);
+  border: 3px solid var(--color-texto);
+  box-shadow: 4px 4px 0 var(--color-azul);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.45;
+  opacity: 0;
+  transform: scale(0.7);
+  transform-origin: left top;
+  transition: opacity 0.2s, transform 0.25s steps(3);
+}
+.miro-direita .balao-guia { transform-origin: right top; }
+.miro-linha .balao-guia { margin-top: 0; margin-bottom: 40px; transform-origin: left bottom; }
+.balao-guia[data-visivel="true"] {
+  opacity: 1;
+  transform: none;
+}
+.balao-guia::after {
+  content: "";
+  position: absolute;
+  top: 16px;
+  width: 9px;
+  height: 12px;
+  background: var(--color-texto);
+}
+.miro-esquerda .balao-guia::after {
+  left: -12px;
+  clip-path: polygon(100% 0, 100% 100%, 67% 100%, 67% 67%, 34% 67%, 34% 34%, 0 34%, 0 0);
+}
+.miro-direita .balao-guia::after {
+  right: -12px;
+  clip-path: polygon(0 0, 100% 0, 100% 34%, 66% 34%, 66% 67%, 33% 67%, 33% 100%, 0 100%);
+}
+
+/* as cinco entradas */
+@keyframes miro-pousar {
+  0% { transform: translateY(-340px); opacity: 0; }
+  10% { opacity: 1; }
+  70% { transform: translateY(0); }
+  80% { transform: scale(1.12, 0.86); } /* amassa ao tocar o chão */
+  90% { transform: translateY(-6px) scale(0.96, 1.04); }
+  100% { transform: none; }
+}
+@keyframes miro-voar {
+  0% { transform: translate(calc(var(--dir) * 55vw), -90px) rotate(calc(var(--dir) * -18deg)); opacity: 0; }
+  8% { opacity: 1; }
+  60% { transform: translate(calc(var(--dir) * -14px), -14px) rotate(calc(var(--dir) * 6deg)); }
+  80% { transform: translate(0, -6px) rotate(0deg); }
+  100% { transform: none; }
+}
+@keyframes miro-espiar {
+  0% { transform: translateX(calc(var(--dir) * 140%)); }
+  30%, 60% { transform: translateX(calc(var(--dir) * 58%)) rotate(calc(var(--dir) * -10deg)); } /* só a cabeça aparece */
+  78% { transform: translateX(calc(var(--dir) * 20%)) translateY(-20px); } /* pula para dentro */
+  100% { transform: none; }
+}
+@keyframes miro-teletransporte {
+  0% { clip-path: inset(0 0 100% 0); filter: brightness(2.6); }
+  60% { clip-path: inset(0 0 30% 0); filter: brightness(1.8); }
+  100% { clip-path: inset(0 0 0 0); filter: none; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .miro-guia[data-estado="entrando"][data-efeito="pousar"] .miro-botao { animation: miro-pousar 1.2s cubic-bezier(0.3, 0.7, 0.4, 1) both; }
+  .miro-guia[data-estado="entrando"][data-efeito="voar"] .miro-botao { animation: miro-voar 1.3s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  .miro-guia[data-estado="entrando"][data-efeito="surgir"] .miro-botao { animation: robo-surgir 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) both; }
+  .miro-guia[data-estado="entrando"][data-efeito="espiar"] .miro-botao { animation: miro-espiar 1.5s ease-in-out both; }
+  .miro-guia[data-estado="entrando"][data-efeito="teletransporte"] .miro-botao { animation: miro-teletransporte 0.8s steps(8, end) both; }
+  .robo.voando .robo-fogo { animation: robo-piscar 0.12s steps(1, end) infinite; }
+  .miro-guia[data-estado="pronto"] .miro-robo { animation: robo-flutuar 1.4s steps(1, end) infinite; }
+  .miro-botao:hover .miro-robo { animation-duration: 0.5s; } /* fica agitado com o mouse em cima */
 }

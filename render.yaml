@@ -6,7 +6,9 @@ services:
     runtime: docker
     rootDir: api
     plan: free
-    healthCheckPath: /saude
+    region: virginia # perto do banco no Neon (aws-us-east-1): a API e o banco conversam mais rápido
+    # /vivo não consulta o banco; com /saude, as checagens do Render manteriam o Neon sempre acordado
+    healthCheckPath: /vivo
     envVars:
       - key: DATABASE_URL
         sync: false
@@ -14,9 +16,3 @@ services:
         sync: false
       - key: IP_SALT
         generateValue: true
-      - key: GROQ_API_KEY
-        sync: false
-      - key: GEMINI_API_KEY
-        sync: false
-      - key: DEMO_FALLBACK
-        value: "true"

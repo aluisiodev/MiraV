@@ -1,45 +1,9 @@
-// Chamadas à API em Go.
-
-import type { Idioma } from "./i18n";
+// Chamadas à API em Go: só os formulários de Contato e Trabalhe Conosco.
 
 export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080").replace(/\/+$/, "");
 
-export type Corte = {
-  slug: string;
-  nome: string;
-  descricao?: string;
-  como_pedir?: string;
-  comprimento?: "curto" | "medio" | "longo";
-  manutencao_semanas?: number;
-};
-
+/** Os cinco formatos de espelho do VisaVision. */
 export type Formato = "retangular" | "oval" | "arco" | "redondo" | "personalizado";
-
-export type Espelho = {
-  slug: string;
-  formato: Formato;
-  nome: string;
-  descricao: string;
-  indicado: string;
-  medidas?: string;
-  destaques: Corte[];
-};
-
-export type Resultado = {
-  id?: number;
-  e_cabelo: boolean;
-  corte: Corte | null;
-  confianca: number;
-  alternativas: Corte[];
-  caracteristicas: string[];
-  explicacao: string;
-  espelho: { slug: string; nome: string; formato: Formato };
-  provedor: string;
-  modelo: string;
-  demonstracao: boolean;
-  cache: boolean;
-  duracao_ms: number;
-};
 
 export type ErroAPI = { erro: string; mensagem: string; campos?: Record<string, string> };
 
@@ -64,16 +28,12 @@ async function pedir<T>(caminho: string, init?: RequestInit): Promise<T> {
   return corpo as T;
 }
 
-export function listarEspelhos(idioma: Idioma, sinal?: AbortSignal) {
-  return pedir<{ espelhos: Espelho[] }>(`/v1/espelhos?idioma=${idioma}`, { signal: sinal }).then((r) => r.espelhos);
-}
-
-export function analisarFoto(foto: Blob, espelho: string, idioma: Idioma) {
-  const dados = new FormData();
-  dados.append("foto", foto, "foto.jpg");
-  dados.append("espelho", espelho);
-  dados.append("idioma", idioma);
-  return pedir<Resultado>("/v1/analises", { method: "POST", body: dados });
+// A API grátis do Render "dorme" depois de 15 min sem uso e leva cerca de 1 min para acordar.
+// As páginas com formulário chamam isto ao abrir: quando a pessoa termina de digitar, a API já acordou.
+export function acordarAPI() {
+  fetch(`${API_URL}/vivo`, { cache: "no-store" }).catch(() => {
+    // sem rede ou API fora do ar: o envio do formulário vai mostrar o erro, se for o caso
+  });
 }
 
 export function enviarFormulario(tipo: "contato" | "candidaturas", dados: Record<string, unknown>) {
@@ -82,25 +42,4 @@ export function enviarFormulario(tipo: "contato" | "candidaturas", dados: Record
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(dados),
   });
-}
-
-// Reduz a foto no próprio aparelho antes do envio: arquivo menor, upload mais rápido
-// e sem metadados (o canvas descarta EXIF e localização).
-export async function prepararFoto(arquivo: File, lado = 1024): Promise<Blob> {
-  const bitmap = await createImageBitmap(arquivo, { imageOrientation: "from-image" });
-  const escala = Math.min(1, lado / Math.max(bitmap.width, bitmap.height));
-  const w = Math.max(1, Math.round(bitmap.width * escala));
-  const h = Math.max(1, Math.round(bitmap.height * escala));
-  const canvas = document.createElement("canvas");
-  canvas.width = w;
-  canvas.height = h;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("canvas indisponível");
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 0, w, h);
-  ctx.drawImage(bitmap, 0, 0, w, h);
-  bitmap.close();
-  return new Promise((ok, falha) =>
-    canvas.toBlob((b) => (b ? ok(b) : falha(new Error("falha ao converter"))), "image/jpeg", 0.88),
-  );
 }

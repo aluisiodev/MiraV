@@ -16,7 +16,7 @@ export function SeletorIdioma({ className = "" }: { className?: string }) {
           aria-pressed={i === idioma}
           onClick={() => mudarIdioma(i)}
           className={`min-h-11 min-w-11 cursor-pointer uppercase transition-colors ${
-            i === idioma ? "text-ouro" : "text-apagado hover:text-texto"
+            i === idioma ? "text-azul" : "text-apagado hover:text-texto"
           }`}
         >
           {i}
@@ -26,15 +26,68 @@ export function SeletorIdioma({ className = "" }: { className?: string }) {
   );
 }
 
-// Logo original (só o olho, metal dourado) no topo do site.
+// Olho da logo nova (azul metálico, tirado dos slides de out/2026) no topo do site.
+// O fundo é transparente, então funciona nos dois temas.
 export function LogoOlho({ altura = 48 }: { altura?: number }) {
   return (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src="/img/logo/olho-original.png" alt="MiraV" style={{ height: altura, width: "auto" }} className="block max-w-none shrink-0 self-start" />
+    <img src="/img/logo/olho-azul.png" alt="MiraV" style={{ height: altura, width: "auto" }} className="block max-w-none shrink-0 self-start" />
   );
 }
 
-export function Cabecalho({ minimo = false }: { minimo?: boolean }) {
+const CHAVE_TEMA = "mirav-tema";
+const COR_BARRA = { claro: "#FFFFFF", escuro: "#00102A" }; // cor da barra do navegador no celular
+
+// Botão que alterna entre o tema claro (padrão) e o escuro (marinho).
+// Ele só troca o atributo data-tema do <html>: as cores mudam sozinhas pelo CSS (globals.css).
+// A escolha fica salva no navegador; o script em app/layout.tsx aplica antes da página aparecer.
+export function BotaoTema({ className = "" }: { className?: string }) {
+  const { t } = useIdioma();
+  const [escuro, setEscuro] = useState(false);
+
+  useEffect(() => {
+    const atual = document.documentElement.dataset.tema === "escuro";
+    setEscuro(atual);
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", atual ? COR_BARRA.escuro : COR_BARRA.claro);
+  }, []);
+
+  const alternar = () => {
+    const novo = !escuro;
+    setEscuro(novo);
+    document.documentElement.dataset.tema = novo ? "escuro" : "claro";
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", novo ? COR_BARRA.escuro : COR_BARRA.claro);
+    try {
+      localStorage.setItem(CHAVE_TEMA, novo ? "escuro" : "claro");
+    } catch {
+      // navegador sem armazenamento (aba anônima, por exemplo): o tema vale só nesta visita
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      aria-pressed={escuro}
+      aria-label={t.menu.temaEscuro}
+      title={t.menu.temaEscuro}
+      onClick={alternar}
+      className={`flex min-h-11 min-w-11 cursor-pointer items-center justify-center text-apagado transition-colors hover:text-azul ${className}`}
+    >
+      {/* no claro mostra a lua (ir para o escuro); no escuro mostra o sol (voltar ao claro) */}
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden>
+        {escuro ? (
+          <>
+            <circle cx="12" cy="12" r="4.2" />
+            <path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" />
+          </>
+        ) : (
+          <path d="M20.5 14.6A8.5 8.5 0 0 1 9.4 3.5a8.5 8.5 0 1 0 11.1 11.1Z" />
+        )}
+      </svg>
+    </button>
+  );
+}
+
+export function Cabecalho() {
   const { t } = useIdioma();
   const caminho = usePathname();
   const [aberto, setAberto] = useState(false);
@@ -72,42 +125,42 @@ export function Cabecalho({ minimo = false }: { minimo?: boolean }) {
           <LogoOlho altura={44} />
         </Link>
 
-        {minimo ? (
-          <SeletorIdioma />
-        ) : (
-          <>
-            <nav aria-label="Principal" className="hidden items-center gap-7 text-[15px] lg:flex">
-              {links.map((l) => (
-                <Link
-                  key={l.href}
-                  href={l.href}
-                  aria-current={caminho === l.href ? "page" : undefined}
-                  className={`py-2.5 transition-colors hover:text-ouro ${caminho === l.href ? "text-ouro" : ""}`}
-                >
-                  {l.nome}
-                </Link>
-              ))}
-              <SeletorIdioma />
-            </nav>
-
-            <button
-              type="button"
-              className="flex min-h-11 min-w-11 cursor-pointer items-center justify-center lg:hidden"
-              aria-expanded={aberto}
-              aria-controls="menu-celular"
-              aria-label={aberto ? t.menu.fechar : t.menu.abrir}
-              onClick={() => setAberto((v) => !v)}
+        <nav aria-label="Principal" className="hidden items-center gap-7 text-[15px] lg:flex">
+          {links.map((l) => (
+            <Link
+              key={l.href}
+              href={l.href}
+              aria-current={caminho === l.href ? "page" : undefined}
+              className={`py-2.5 transition-colors hover:text-azul ${caminho === l.href ? "text-azul" : ""}`}
             >
-              <span className="relative block h-3 w-6">
-                <span className={`absolute left-0 h-[1.5px] w-6 bg-texto transition-all ${aberto ? "top-1.5 rotate-45" : "top-0"}`} />
-                <span className={`absolute left-0 h-[1.5px] w-6 bg-texto transition-all ${aberto ? "top-1.5 -rotate-45" : "top-3"}`} />
-              </span>
-            </button>
-          </>
-        )}
+              {l.nome}
+            </Link>
+          ))}
+          <div className="flex items-center gap-1">
+            <BotaoTema />
+            <SeletorIdioma />
+          </div>
+        </nav>
+
+        <div className="flex items-center gap-1 lg:hidden">
+          <BotaoTema />
+          <button
+            type="button"
+            className="flex min-h-11 min-w-11 cursor-pointer items-center justify-center"
+            aria-expanded={aberto}
+            aria-controls="menu-celular"
+            aria-label={aberto ? t.menu.fechar : t.menu.abrir}
+            onClick={() => setAberto((v) => !v)}
+          >
+            <span className="relative block h-3 w-6">
+              <span className={`absolute left-0 h-[1.5px] w-6 bg-texto transition-all ${aberto ? "top-1.5 rotate-45" : "top-0"}`} />
+              <span className={`absolute left-0 h-[1.5px] w-6 bg-texto transition-all ${aberto ? "top-1.5 -rotate-45" : "top-3"}`} />
+            </span>
+          </button>
+        </div>
       </div>
 
-      {!minimo && aberto && (
+      {aberto && (
         <nav id="menu-celular" aria-label="Principal" className="flex h-[calc(100dvh-68px)] flex-col gap-1 px-4 pb-8 pt-4 lg:hidden">
           {links.map((l, i) => (
             <Link

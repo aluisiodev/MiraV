@@ -22,11 +22,19 @@ export const metadata: Metadata = {
   openGraph: { title: pt.meta.titulo, description: pt.meta.descricao, images: ["/icon-512.png"], locale: "pt_BR", type: "website" },
 };
 
-export const viewport: Viewport = { themeColor: "#0B0B0C", colorScheme: "dark" };
+export const viewport: Viewport = { themeColor: "#FFFFFF", colorScheme: "light dark" };
+
+// Roda antes de a página aparecer: se o visitante escolheu o tema escuro, aplica na hora.
+// Sem isto, a página piscaria clara antes de ficar escura. O padrão é o tema claro.
+const scriptTema = `(function(){try{if(localStorage.getItem("mirav-tema")==="escuro")document.documentElement.dataset.tema="escuro";}catch(e){}})();`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR">
+    // suppressHydrationWarning: o script acima muda o data-tema antes do React, e isso é esperado
+    <html lang="pt-BR" data-tema="claro" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: scriptTema }} />
+      </head>
       <body>
         <IdiomaProvider>
           <Carregamento />

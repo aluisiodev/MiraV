@@ -1,13 +1,12 @@
-// Comando server sobe a API do VisaVision.
+// Comando server sobe a API do site da MiraV (formulários de Contato e Trabalhe Conosco).
 //
 // Variáveis de ambiente (veja .env.example):
 //
 //	DATABASE_URL       conexão PostgreSQL (obrigatória)
 //	PORT               porta HTTP (padrão 8080)
 //	ALLOWED_ORIGINS    origens do site separadas por vírgula
-//	GROQ_API_KEY, GEMINI_API_KEY, OPENROUTER_API_KEY, OLLAMA_URL   provedores de IA
-//	LLM_ORDER          ordem dos provedores (padrão groq,gemini,openrouter,ollama)
-//	DEMO_FALLBACK      "true" devolve resultado simulado se nenhuma IA responder
+//	IP_SALT            sal para anonimizar o IP gravado nos formulários
+//	TRUST_PROXY        "true" lê o IP real do cabeçalho X-Forwarded-For (Render)
 package main
 
 import (
@@ -23,7 +22,6 @@ import (
 
 	"github.com/mirav/visavision-api/internal/db"
 	"github.com/mirav/visavision-api/internal/httpapi"
-	"github.com/mirav/visavision-api/internal/llm"
 )
 
 func env(nome, padrao string) string {
@@ -31,40 +29,6 @@ func env(nome, padrao string) string {
 		return v
 	}
 	return padrao
-}
-
-// provedores monta a cadeia de IAs a partir das chaves presentes no ambiente.
-func provedores() []llm.Provedor {
-	disponiveis := map[string]llm.Provedor{}
-	if k := env("GROQ_API_KEY", ""); k != "" {
-		disponiveis["groq"] = llm.Provedor{
-			Nome: "groq", BaseURL: "https://api.groq.com/openai/v1", Chave: k,
-			Modelo: env("GROQ_MODEL", "qwen/qwen3.8-27b"), JSONMode: true,
-		}
-	}
-	if k := env("GEMINI_API_KEY", ""); k != "" {
-		disponiveis["gemini"] = llm.Provedor{
-			Nome: "gemini", BaseURL: "https://generativelanguage.googleapis.com/v1beta/openai", Chave: k,
-			Modelo: env("GEMINI_MODEL", "gemini-flash-latest"), JSONMode: true,
-		}
-	}
-	if k, m := env("OPENROUTER_API_KEY", ""), env("OPENROUTER_MODEL", ""); k != "" && m != "" {
-		disponiveis["openrouter"] = llm.Provedor{
-			Nome: "openrouter", BaseURL: "https://openrouter.ai/api/v1", Chave: k, Modelo: m, JSONMode: false,
-		}
-	}
-	if u := env("OLLAMA_URL", ""); u != "" {
-		disponiveis["ollama"] = llm.Provedor{
-			Nome: "ollama", BaseURL: u, Modelo: env("OLLAMA_MODEL", "qwen3-vl:8b"), JSONMode: true,
-		}
-	}
-	var lista []llm.Provedor
-	for _, nome := range strings.Split(env("LLM_ORDER", "groq,gemini,openrouter,ollama"), ",") {
-		if p, ok := disponiveis[strings.TrimSpace(nome)]; ok {
-			lista = append(lista, p)
-		}
-	}
-	return lista
 }
 
 func main() {
@@ -97,17 +61,6 @@ func rodar(log *slog.Logger) error {
 		log.Info("migrações aplicadas", "versoes", aplicadas)
 	}
 
-	provs := provedores()
-	demo := env("DEMO_FALLBACK", "true") == "true"
-	nomes := make([]string, 0, len(provs))
-	for _, p := range provs {
-		nomes = append(nomes, p.Nome+":"+p.Modelo)
-	}
-	log.Info("IA configurada", "provedores", nomes, "demonstracao_de_reserva", demo)
-	if len(provs) == 0 && !demo {
-		return errors.New("nenhuma chave de IA definida e DEMO_FALLBACK desligado")
-	}
-
 	var origens []string
 	for _, o := range strings.Split(env("ALLOWED_ORIGINS", "http://localhost:3000"), ",") {
 		if o = strings.TrimSpace(o); o != "" {
@@ -115,7 +68,7 @@ func rodar(log *slog.Logger) error {
 		}
 	}
 
-	srv := httpapi.Novo(banco, llm.NovoCliente(provs, demo), httpapi.Config{
+	srv := httpapi.Novo(banco, httpapi.Config{
 		OrigensPermitidas: origens,
 		ConfiarProxy:      env("TRUST_PROXY", "true") == "true",
 		SalIP:             env("IP_SALT", "troque-este-sal"),
@@ -126,7 +79,7 @@ func rodar(log *slog.Logger) error {
 		Handler:           srv.Handler(),
 		ReadHeaderTimeout: 10 * time.Second,
 		ReadTimeout:       60 * time.Second,
-		WriteTimeout:      120 * time.Second,
+		WriteTimeout:      30 * time.Second,
 		IdleTimeout:       90 * time.Second,
 	}
 	erros := make(chan error, 1)

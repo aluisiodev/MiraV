@@ -21,7 +21,12 @@ export function Carregamento() {
     }
     const reduzido = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const duracao = jaViu ? 0 : reduzido ? 500 : 1900;
-    const a = window.setTimeout(() => setFase("saindo"), duracao);
+    const a = window.setTimeout(() => {
+      setFase("saindo");
+      // avisa quem espera a abertura sair (o Miro do topo da home, por exemplo)
+      document.documentElement.dataset.pronto = "1";
+      window.dispatchEvent(new Event("mirav:pronto"));
+    }, duracao);
     const b = window.setTimeout(() => setFase("fim"), duracao + 600);
     return () => {
       window.clearTimeout(a);
@@ -39,9 +44,9 @@ export function Carregamento() {
       }`}
     >
       <OlhoAnimado tamanho={150} rotulo={t.carregando} />
-      <span className="font-marca text-[30px] font-medium tracking-[0.12em] text-ouro">MIRAV</span>
+      <span className="font-marca text-[30px] font-medium tracking-[0.12em] text-azul">MIRAV</span>
       <div className="h-[2px] w-[200px] bg-linha">
-        <div className="barra-carga h-[2px] bg-ouro" />
+        <div className="barra-carga h-[2px] bg-azul" />
       </div>
       <span className="rotulo !text-[11px] !tracking-[0.2em]">{t.carregando}</span>
     </div>

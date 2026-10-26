@@ -2,9 +2,10 @@ import type { Formato } from "@/lib/api";
 
 export const FORMATOS: Formato[] = ["retangular", "oval", "arco", "redondo", "personalizado"];
 
-// Contorno de cada modelo de espelho, desenhado em ouro.
+// Contorno de cada modelo de espelho, desenhado em azul.
 export function IconeEspelho({ formato, className = "", ativo = false }: { formato: Formato; className?: string; ativo?: boolean }) {
-  const cor = ativo ? "#E0B23B" : "#8A6A1F";
+  // as cores vêm das variáveis do tema, então o ícone acompanha o claro e o escuro
+  const cor = ativo ? "var(--color-azul)" : "var(--color-azul-escuro)";
   const comum = { fill: "none", stroke: cor, strokeWidth: 2.5, vectorEffect: "non-scaling-stroke" as const };
   return (
     <svg viewBox="0 0 80 100" className={className} aria-hidden="true">
@@ -19,12 +20,3 @@ export function IconeEspelho({ formato, className = "", ativo = false }: { forma
     </svg>
   );
 }
-
-// Moldura com o formato do espelho, usada para mostrar a foto na página /espelho.
-export const estiloMoldura: Record<Formato, { aspecto: string; raio: string }> = {
-  retangular: { aspecto: "3 / 4", raio: "2px" },
-  oval: { aspecto: "3 / 4", raio: "50%" },
-  arco: { aspecto: "3 / 4", raio: "999px 999px 2px 2px" },
-  redondo: { aspecto: "1 / 1", raio: "50%" },
-  personalizado: { aspecto: "3 / 4", raio: "38% 2px 38% 2px" },
-};

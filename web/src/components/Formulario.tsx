@@ -1,7 +1,8 @@
 "use client";
 
 import { cloneElement, isValidElement, useEffect, useState, type FormEvent, type ReactNode } from "react";
-import { enviarFormulario, FalhaAPI } from "@/lib/api";
+import { acordarAPI, enviarFormulario, FalhaAPI } from "@/lib/api";
+import { buscarVaga } from "@/data/vagas";
 import { useIdioma } from "@/lib/i18n";
 
 type Tipo = "contato" | "candidaturas";
@@ -15,12 +16,26 @@ export function Formulario({ tipo, placeholderMensagem }: { tipo: Tipo; placehol
   const [erroGeral, setErroGeral] = useState("");
   const [mensagemInicial, setMensagemInicial] = useState("");
 
-  // /contato/?modelo=oval já começa a mensagem com o modelo escolhido em Produtos
+  const [areaInicial, setAreaInicial] = useState("");
+
+  // acorda a API (Render grátis) enquanto a pessoa preenche
+  useEffect(() => acordarAPI(), []);
+
+  // /contato/?modelo=oval já começa a mensagem com o modelo escolhido em Produtos.
+  // /trabalhe-conosco/?vaga=analista-financeiro já começa com a vaga e escolhe a área.
   useEffect(() => {
-    if (tipo !== "contato") return;
-    const modelo = new URLSearchParams(window.location.search).get("modelo") as keyof typeof t.modelos.nomes | null;
-    if (modelo && modelo in t.modelos.nomes) setMensagemInicial(f.interesseModelo.replace("{modelo}", t.modelos.nomes[modelo]));
-  }, [tipo, t, f.interesseModelo]);
+    const busca = new URLSearchParams(window.location.search);
+    if (tipo === "contato") {
+      const modelo = busca.get("modelo") as keyof typeof t.modelos.nomes | null;
+      if (modelo && modelo in t.modelos.nomes) setMensagemInicial(f.interesseModelo.replace("{modelo}", t.modelos.nomes[modelo]));
+      return;
+    }
+    const vaga = buscarVaga(busca.get("vaga") ?? "");
+    if (vaga) {
+      setMensagemInicial(f.interesseVaga.replace("{vaga}", vaga.textos[idioma].cargo));
+      setAreaInicial(vaga.areaFormulario);
+    }
+  }, [tipo, t, f.interesseModelo, f.interesseVaga, idioma]);
 
   async function enviar(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -60,7 +75,7 @@ export function Formulario({ tipo, placeholderMensagem }: { tipo: Tipo; placehol
 
   if (estado === "ok") {
     return (
-      <div className="flex flex-col items-start gap-4 border border-ouro-escuro bg-superficie p-8" role="status">
+      <div className="flex flex-col items-start gap-4 border border-azul-escuro bg-superficie p-8" role="status">
         <span className="text-3xl font-medium tracking-tight">{f.sucessoTitulo}</span>
         <p className="text-texto-2">{f.sucessoTexto}</p>
         <button type="button" className="btn-linha mt-2 cursor-pointer" onClick={() => setEstado("livre")}>
@@ -112,7 +127,7 @@ export function Formulario({ tipo, placeholderMensagem }: { tipo: Tipo; placehol
         ) : (
           <>
             <Campo nome="area" rotulo={f.area} erro={msgErro("area")}>
-              <select name="area" className="campo cursor-pointer" defaultValue="" required>
+              <select key={areaInicial} name="area" className="campo cursor-pointer" defaultValue={areaInicial} required>
                 <option value="">{f.selecione}</option>
                 {Object.entries(f.areas).map(([v, n]) => (
                   <option key={v} value={v}>
@@ -138,12 +153,12 @@ export function Formulario({ tipo, placeholderMensagem }: { tipo: Tipo; placehol
           name="consentimento"
           aria-invalid={!!erros.consentimento}
           aria-describedby={erros.consentimento ? "erro-consentimento" : undefined}
-          className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer accent-[#E0B23B]"
+          className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer accent-azul"
         />
         <span>
           {f.consentimento}
           {erros.consentimento && (
-            <span id="erro-consentimento" className="mt-1 block text-[#ff8a8d]">
+            <span id="erro-consentimento" className="mt-1 block text-erro-texto">
               {msgErro("consentimento")}
             </span>
           )}
@@ -151,12 +166,12 @@ export function Formulario({ tipo, placeholderMensagem }: { tipo: Tipo; placehol
       </label>
 
       {erroGeral && (
-        <p role="alert" className="border border-[#e5484d]/50 bg-[#e5484d]/10 px-4 py-3 text-sm text-[#ffb3b5]">
+        <p role="alert" className="border border-erro/50 bg-erro/10 px-4 py-3 text-sm text-erro-texto">
           {erroGeral}
         </p>
       )}
 
-      <button type="submit" disabled={estado === "enviando"} className="btn-ouro self-start cursor-pointer">
+      <button type="submit" disabled={estado === "enviando"} className="btn-azul self-start cursor-pointer">
         {estado === "enviando" ? f.enviando : f.enviar}
       </button>
     </form>
@@ -188,7 +203,7 @@ function Campo({
         {children}
       </ComId>
       {erro && (
-        <span id={`${id}-erro`} className="text-sm text-[#ff8a8d]">
+        <span id={`${id}-erro`} className="text-sm text-erro-texto">
           {erro}
         </span>
       )}
