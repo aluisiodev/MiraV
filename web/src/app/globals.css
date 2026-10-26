@@ -230,19 +230,20 @@
   transition: opacity 0.6s ease;
 }
 
-/* ---------- Radar da diretoria (página Sobre, components/RadarDiretoria.tsx) ----------
-   Unidade cqw = 1% da largura do radar (container query). Assim tudo escala junto,
-   do celular ao telão, sem JavaScript medindo nada. */
+@property --tam {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 60px;
+}
 .radar {
-  --r: 38cqw; /* raio da órbita da diretoria */
-  --tam: clamp(52px, 14cqw, 100px); /* tamanho de cada foto */
-  --giro: 0deg; /* quanto a órbita já girou: atualizado pelo JavaScript (RadarDiretoria.tsx) */
   position: relative;
   width: 100%;
   max-width: 760px;
   aspect-ratio: 1;
-  margin: 0 auto 36px; /* espaço para o nome de quem passa embaixo */
+  margin: 0 auto 48px; /* espaço para o nome de quem passa embaixo */
+  --centro: 10.5cqw; /* raio do círculo central, com o olho */
   container-type: inline-size;
+  touch-action: pan-y; /* no celular, a página continua rolando; quem é arrastado tem touch-action: none */
 }
 .radar-anel {
   position: absolute;
@@ -250,26 +251,33 @@
   border-radius: 50%;
   border: 1px solid var(--color-linha);
   pointer-events: none;
+  transition: border-color 0.2s, border-width 0.2s, box-shadow 0.2s;
 }
-.radar-anel-tracejado {
-  border-style: dashed;
-  border-color: var(--color-linha-forte);
+.radar-anel[data-orbita="dentro"] { border-color: color-mix(in srgb, var(--color-azul) 45%, transparent); }
+.radar-anel[data-orbita="meio"] { border-color: color-mix(in srgb, var(--color-azul) 28%, transparent); }
+.radar-anel[data-orbita="fora"] { border-style: dashed; border-color: var(--color-linha-forte); }
+/* anel que vai receber quem está sendo arrastado */
+.radar-anel.alvo {
+  border-width: 2px;
+  border-color: var(--color-azul);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--color-azul) 40%, transparent);
 }
-/* A varredura é um recorte redondo; quem gira é o desenho dentro dele (::before).
-   Assim o giro não passa das bordas da tela. */
 .radar-varredura {
   position: absolute;
   inset: 1.5cqw;
   overflow: hidden;
   border-radius: 50%;
   pointer-events: none;
-  -webkit-mask-image: radial-gradient(circle, transparent 12cqw, #000 12.5cqw);
-  mask-image: radial-gradient(circle, transparent 12cqw, #000 12.5cqw);
+  -webkit-mask-image: radial-gradient(circle, transparent var(--centro), #000 calc(var(--centro) + 0.5cqw));
+  mask-image: radial-gradient(circle, transparent var(--centro), #000 calc(var(--centro) + 0.5cqw));
 }
+/* o desenho gira dentro de um recorte redondo (assim não cria rolagem lateral no celular);
+   --varredura é escrito pelo JavaScript, no mesmo relógio que acende os diretores */
 .radar-varredura::before {
   content: "";
   position: absolute;
   inset: 0;
+  transform: rotate(var(--varredura, 0deg));
   background: conic-gradient(from 0deg, transparent 0deg 300deg, color-mix(in srgb, var(--color-azul) var(--forca-varredura, 13%), transparent) 360deg);
 }
 :root[data-tema="escuro"] .radar-varredura::before {
@@ -277,13 +285,13 @@
 }
 .radar-pulso {
   position: absolute;
-  inset: calc(50cqw - 12cqw);
+  inset: calc(50cqw - var(--centro));
   border-radius: 50%;
   border: 1px solid var(--color-azul);
   opacity: 0;
   pointer-events: none;
 }
-/* A órbita é um ponto sem tamanho no centro: ela gira e leva junto o que está "pendurado" nela.
+/* A órbita é um ponto sem tamanho no centro; cada pessoa e cada pontinho é posicionado a partir dele.
    (Uma caixa quadrada girando passaria das bordas e criaria rolagem lateral no celular.) */
 .radar-orbita {
   position: absolute;
@@ -305,44 +313,51 @@
   box-shadow: 0 0 10px var(--color-ciano);
   transform: rotate(var(--a)) translateX(var(--raio));
 }
+/* linha do centro até cada pessoa (o JavaScript define o ângulo e o comprimento) */
 .radar-raio {
   position: absolute;
   left: 0;
   top: 0;
-  width: var(--r);
+  width: 0;
   height: 1px;
   transform-origin: 0 50%;
-  transform: rotate(calc(var(--a) + var(--giro)));
-  background: linear-gradient(90deg, transparent 12cqw, var(--color-linha-forte));
-  transition: background 0.3s;
+  background: linear-gradient(90deg, transparent var(--centro), var(--color-linha-forte));
 }
 .radar-raio.ativo {
   height: 2px;
-  background: linear-gradient(90deg, transparent 12cqw, var(--color-azul));
+  background: linear-gradient(90deg, transparent var(--centro), var(--color-azul));
 }
+/* cada pessoa é um ponto (o JavaScript move com translate); a foto fica centralizada nele */
 .radar-planeta {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  z-index: 2;
+  pointer-events: auto;
+  will-change: transform;
+}
+/* tamanhos iguais aos de FOTO em RadarDiretoria.tsx */
+.radar-planeta,
+.radar-etiqueta {
+  transition: --tam 1.2s ease;
+}
+.radar-planeta[data-orbita="dentro"], .radar-etiqueta[data-orbita="dentro"] { --tam: clamp(38px, 11cqw, 84px); }
+.radar-planeta[data-orbita="meio"], .radar-etiqueta[data-orbita="meio"] { --tam: clamp(32px, 9.5cqw, 72px); }
+.radar-planeta[data-orbita="fora"], .radar-etiqueta[data-orbita="fora"] { --tam: clamp(28px, 8cqw, 61px); }
+.radar-planeta.ativo { z-index: 3; }
+.radar-planeta.arrastando { z-index: 6; }
+.radar-rosto {
   position: absolute;
   left: 0;
   top: 0;
   width: var(--tam);
   height: var(--tam);
-  margin: calc(var(--tam) / -2) 0 0 calc(var(--tam) / -2);
-  /* leva para o ângulo (lugar da pessoa + giro da órbita), empurra até a órbita e desfaz o giro:
-     assim a pessoa fica sempre "em pé" */
-  transform: rotate(calc(var(--a) + var(--giro))) translateX(var(--r)) rotate(calc((var(--a) + var(--giro)) * -1));
-  pointer-events: auto;
-}
-.radar-planeta.arrastando {
-  z-index: 3; /* quem está sendo arrastado passa por cima dos outros */
-}
-.radar-rosto {
-  position: relative;
-  display: block;
-  width: 100%;
-  height: 100%;
   border-radius: 50%;
+  transform: translate(-50%, -50%);
   cursor: grab;
-  touch-action: none; /* no celular, arrastar o dedo move a pessoa em vez de rolar a página */
+  touch-action: none; /* arrastar o dedo move a pessoa em vez de rolar a página */
 }
 .radar[data-arrastando],
 .radar[data-arrastando] .radar-rosto {
@@ -359,32 +374,55 @@
   border: 2px solid var(--color-linha-forte);
   background: var(--color-superficie);
   font-size: calc(var(--tam) * 0.3);
-  transition: transform 0.3s ease, border-color 0.3s, box-shadow 0.3s;
+  transition: transform 0.3s ease, border-color 0.3s, box-shadow 0.9s ease-out;
 }
+.radar-planeta[data-orbita="dentro"] .radar-avatar { border-color: color-mix(in srgb, var(--color-azul) 70%, transparent); }
 .radar-rosto:hover .radar-avatar,
 .radar-rosto:focus-visible .radar-avatar {
   transform: scale(1.08);
   border-color: var(--color-azul);
 }
+.radar-planeta.arrastando .radar-avatar {
+  transform: scale(1.15);
+  box-shadow: 0 0 0 3px var(--color-fundo), 0 12px 28px color-mix(in srgb, var(--color-azul) 40%, transparent);
+}
 .radar-rosto[aria-pressed="true"] .radar-avatar {
   border-color: var(--color-azul);
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-azul) 25%, transparent), 0 0 30px color-mix(in srgb, var(--color-azul) 45%, transparent);
 }
+/* a faixa do radar acabou de passar por cima: o círculo acende em ciano e apaga devagar */
+.radar-planeta[data-brilho] .radar-avatar {
+  border-color: var(--color-ciano);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-ciano) 55%, transparent), 0 0 34px var(--color-ciano);
+  transition: transform 0.3s ease, border-color 0.08s, box-shadow 0.08s;
+}
+/* nomes: camada acima das fotos, cada um preso a um ponto que acompanha a pessoa */
+.radar-etiquetas { z-index: 4; }
+.radar-etiqueta {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+}
 .radar-legenda {
   position: absolute;
-  top: calc(100% + 6px);
-  left: 50%;
+  top: calc(var(--tam) / 2 + 5px);
+  left: 0;
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 1px 6px 2px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--color-fundo) 82%, transparent);
   line-height: 1.25;
   white-space: nowrap;
-  pointer-events: none;
 }
+.radar-etiqueta.arrastando .radar-legenda { top: calc(var(--tam) * 0.575 + 5px); }
 .radar-centro {
   position: absolute;
-  inset: calc(50cqw - 12cqw);
+  inset: calc(50cqw - var(--centro));
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -413,7 +451,6 @@
 @media (prefers-reduced-motion: no-preference) {
   .radar-pontos-1 { animation: radar-girar 34s linear infinite reverse; }
   .radar-pontos-2 { animation: radar-girar 120s linear infinite; }
-  .radar-varredura::before { animation: radar-girar 7s linear infinite; }
   .radar-pulso { animation: radar-pulsar 5s ease-out infinite; }
   .radar-pulso-2 { animation-delay: 2.5s; }
   .radar-olho { animation: mv-piscar 4.2s ease-in-out infinite; }
