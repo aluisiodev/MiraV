@@ -7,6 +7,7 @@ import (
 	"embed"
 	"fmt"
 	"io/fs"
+	"net/url"
 	"sort"
 	"strings"
 	"time"
@@ -34,9 +35,35 @@ type Lead struct {
 
 type Store struct{ db *sql.DB }
 
+// Opções que o cliente oficial do PostgreSQL entende, mas o driver lib/pq não.
+// O lib/pq repassaria cada uma ao servidor, que recusa a conexão com
+// "unrecognized configuration parameter". A URL que o Neon mostra traz channel_binding=require.
+var opcoesSoDoLibpq = []string{"channel_binding", "gssencmode", "sslnegotiation", "target_session_attrs"}
+
+// urlParaLibPQ tira da URL as opções de opcoesSoDoLibpq. A conexão continua criptografada (sslmode).
+func urlParaLibPQ(bruta string) string {
+	u, err := url.Parse(bruta)
+	if err != nil || (u.Scheme != "postgres" && u.Scheme != "postgresql") {
+		return bruta
+	}
+	q := u.Query()
+	mudou := false
+	for _, k := range opcoesSoDoLibpq {
+		if q.Has(k) {
+			q.Del(k)
+			mudou = true
+		}
+	}
+	if !mudou {
+		return bruta
+	}
+	u.RawQuery = q.Encode()
+	return u.String()
+}
+
 // Abrir conecta ao banco e confere a conexão.
-func Abrir(ctx context.Context, url string) (*Store, error) {
-	conn, err := sql.Open("postgres", url)
+func Abrir(ctx context.Context, endereco string) (*Store, error) {
+	conn, err := sql.Open("postgres", urlParaLibPQ(endereco))
 	if err != nil {
 		return nil, err
 	}

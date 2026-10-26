@@ -336,6 +336,8 @@ export const pt = {
     enviando: "Enviando…",
     sucessoTitulo: "Mensagem recebida.",
     sucessoTexto: "Obrigado. Nossa equipe responderá pelo e-mail informado.",
+    academicoTitulo: "Obrigado!",
+    academicoTexto: "Este site é um projeto acadêmico, então sua mensagem não foi enviada para ninguém. Na versão real, a equipe da MiraV responderia pelo e-mail informado.",
     interesseModelo: "Tenho interesse no modelo {modelo}. ",
     interesseVaga: "Olá! Quero me candidatar à vaga de {vaga}. ",
     novo: "Enviar outra mensagem",

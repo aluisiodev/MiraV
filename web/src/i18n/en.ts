@@ -336,6 +336,8 @@ export const en: Dicionario = {
     enviando: "Sending…",
     sucessoTitulo: "Message received.",
     sucessoTexto: "Thank you. Our team will reply to the email you provided.",
+    academicoTitulo: "Thank you!",
+    academicoTexto: "This website is an academic project, so your message was not sent to anyone. In the real version, the MiraV team would reply to the email you provided.",
     interesseModelo: "I am interested in the {modelo} model. ",
     interesseVaga: "Hello! I would like to apply for the {vaga} position. ",
     novo: "Send another message",

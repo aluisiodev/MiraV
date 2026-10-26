@@ -1,13 +1,15 @@
 "use client";
 
-import { cloneElement, isValidElement, useEffect, useState, type FormEvent, type ReactNode } from "react";
-import { acordarAPI, enviarFormulario, FalhaAPI } from "@/lib/api";
+import { cloneElement, isValidElement, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { acordarAPI, ENVIO_LIGADO, enviarFormulario, FalhaAPI } from "@/lib/api";
 import { buscarVaga } from "@/data/vagas";
 import { useIdioma } from "@/lib/i18n";
 
 type Tipo = "contato" | "candidaturas";
 
-// Formulário de Contato ou Trabalhe Conosco, gravado no PostgreSQL pela API.
+// Formulário de Contato ou Trabalhe Conosco.
+// Com a API ligada (ENVIO_LIGADO), grava no PostgreSQL. Na versão acadêmica, só valida os campos
+// e agradece, avisando que nada foi enviado; por isso também não pede o consentimento da LGPD.
 export function Formulario({ tipo, placeholderMensagem }: { tipo: Tipo; placeholderMensagem: string }) {
   const { t, idioma } = useIdioma();
   const f = t.form;
@@ -17,6 +19,15 @@ export function Formulario({ tipo, placeholderMensagem }: { tipo: Tipo; placehol
   const [mensagemInicial, setMensagemInicial] = useState("");
 
   const [areaInicial, setAreaInicial] = useState("");
+  const aviso = useRef<HTMLDivElement>(null);
+
+  // o agradecimento é mais curto que o formulário: leva a página até ele (no celular ficaria escondido)
+  useEffect(() => {
+    if (estado !== "ok" || !aviso.current) return;
+    const reduzir = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    aviso.current.scrollIntoView({ block: "center", behavior: reduzir ? "auto" : "smooth" });
+    aviso.current.focus({ preventScroll: true });
+  }, [estado]);
 
   // acorda a API (Render grátis) enquanto a pessoa preenche
   useEffect(() => acordarAPI(), []);
@@ -49,11 +60,18 @@ export function Formulario({ tipo, placeholderMensagem }: { tipo: Tipo; placehol
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((dados.email ?? "").trim())) local.email = "formato";
     if ((dados.mensagem ?? "").trim().length < 10) local.mensagem = "tamanho";
     if (tipo === "candidaturas" && !dados.area) local.area = "opcao";
-    if (!corpo.consentimento) local.consentimento = "obrigatorio";
+    if (ENVIO_LIGADO && !corpo.consentimento) local.consentimento = "obrigatorio";
     setErros(local);
     setErroGeral("");
     if (Object.keys(local).length) {
       form.querySelector<HTMLElement>(`[name="${Object.keys(local)[0]}"]`)?.focus();
+      return;
+    }
+
+    // versão acadêmica: nada sai do navegador
+    if (!ENVIO_LIGADO) {
+      setEstado("ok");
+      form.reset();
       return;
     }
 
@@ -75,9 +93,9 @@ export function Formulario({ tipo, placeholderMensagem }: { tipo: Tipo; placehol
 
   if (estado === "ok") {
     return (
-      <div className="flex flex-col items-start gap-4 border border-azul-escuro bg-superficie p-8" role="status">
-        <span className="text-3xl font-medium tracking-tight">{f.sucessoTitulo}</span>
-        <p className="text-texto-2">{f.sucessoTexto}</p>
+      <div ref={aviso} tabIndex={-1} className="flex flex-col items-start gap-4 border border-azul-escuro bg-superficie p-8 outline-none" role="status">
+        <span className="text-3xl font-medium tracking-tight">{ENVIO_LIGADO ? f.sucessoTitulo : f.academicoTitulo}</span>
+        <p className="text-texto-2">{ENVIO_LIGADO ? f.sucessoTexto : f.academicoTexto}</p>
         <button type="button" className="btn-linha mt-2 cursor-pointer" onClick={() => setEstado("livre")}>
           {f.novo}
         </button>
@@ -147,23 +165,25 @@ export function Formulario({ tipo, placeholderMensagem }: { tipo: Tipo; placehol
         <textarea key={mensagemInicial} defaultValue={mensagemInicial} name="mensagem" rows={5} required maxLength={4000} placeholder={placeholderMensagem} className="campo resize-y" />
       </Campo>
 
-      <label className="flex cursor-pointer items-start gap-3 text-sm leading-relaxed text-texto-2">
-        <input
-          type="checkbox"
-          name="consentimento"
-          aria-invalid={!!erros.consentimento}
-          aria-describedby={erros.consentimento ? "erro-consentimento" : undefined}
-          className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer accent-azul"
-        />
-        <span>
-          {f.consentimento}
-          {erros.consentimento && (
-            <span id="erro-consentimento" className="mt-1 block text-erro-texto">
-              {msgErro("consentimento")}
-            </span>
-          )}
-        </span>
-      </label>
+      {ENVIO_LIGADO && (
+        <label className="flex cursor-pointer items-start gap-3 text-sm leading-relaxed text-texto-2">
+          <input
+            type="checkbox"
+            name="consentimento"
+            aria-invalid={!!erros.consentimento}
+            aria-describedby={erros.consentimento ? "erro-consentimento" : undefined}
+            className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer accent-azul"
+          />
+          <span>
+            {f.consentimento}
+            {erros.consentimento && (
+              <span id="erro-consentimento" className="mt-1 block text-erro-texto">
+                {msgErro("consentimento")}
+              </span>
+            )}
+          </span>
+        </label>
+      )}
 
       {erroGeral && (
         <p role="alert" className="border border-erro/50 bg-erro/10 px-4 py-3 text-sm text-erro-texto">

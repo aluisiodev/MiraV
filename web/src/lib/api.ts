@@ -1,6 +1,12 @@
 // Chamadas à API em Go: só os formulários de Contato e Trabalhe Conosco.
+//
+// Versão acadêmica: sem NEXT_PUBLIC_API_URL, os formulários não enviam nada. Eles validam os campos
+// e mostram um agradecimento avisando que a mensagem não foi enviada (Formulario.tsx).
+// Para ligar o envio de verdade, publique a API e defina NEXT_PUBLIC_API_URL com o endereço dela.
 
-export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080").replace(/\/+$/, "");
+export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "").trim().replace(/\/+$/, "");
+/** true quando existe uma API configurada para receber os formulários. */
+export const ENVIO_LIGADO = API_URL !== "";
 
 /** Os cinco formatos de espelho do VisaVision. */
 export type Formato = "retangular" | "oval" | "arco" | "redondo" | "personalizado";
@@ -31,6 +37,7 @@ async function pedir<T>(caminho: string, init?: RequestInit): Promise<T> {
 // A API grátis do Render "dorme" depois de 15 min sem uso e leva cerca de 1 min para acordar.
 // As páginas com formulário chamam isto ao abrir: quando a pessoa termina de digitar, a API já acordou.
 export function acordarAPI() {
+  if (!ENVIO_LIGADO) return;
   fetch(`${API_URL}/vivo`, { cache: "no-store" }).catch(() => {
     // sem rede ou API fora do ar: o envio do formulário vai mostrar o erro, se for o caso
   });

@@ -336,6 +336,8 @@ export const es: Dicionario = {
     enviando: "Enviando…",
     sucessoTitulo: "Mensaje recibido.",
     sucessoTexto: "Gracias. Nuestro equipo responderá al correo indicado.",
+    academicoTitulo: "¡Gracias!",
+    academicoTexto: "Este sitio es un proyecto académico, así que tu mensaje no se envió a nadie. En la versión real, el equipo de MiraV respondería al correo indicado.",
     interesseModelo: "Me interesa el modelo {modelo}. ",
     interesseVaga: "¡Hola! Quiero postularme a la vacante de {vaga}. ",
     novo: "Enviar otro mensaje",

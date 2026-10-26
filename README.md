@@ -48,7 +48,7 @@ curl http://localhost:8080/saude
 
 ```bash
 cd web
-cp .env.example .env.local        # NEXT_PUBLIC_API_URL=http://localhost:8080
+cp .env.example .env.local        # para enviar à API local: NEXT_PUBLIC_API_URL=http://localhost:8080
 npm install
 npm run dev                       # http://localhost:3000
 ```
@@ -67,20 +67,24 @@ cd web && npm run lint && npm run build
 
 ## Publicar de graça
 
+**Versão acadêmica (a publicada):** só o site, no **Cloudflare Pages** (plano gratuito, sem cartão).
+Diretório `web`, comando `npm run build`, saída `out`. Variáveis: `NEXT_PUBLIC_SITE_URL` (endereço do site, usado no QR code) e `NODE_VERSION=22`.
+Sem `NEXT_PUBLIC_API_URL`, os formulários validam os campos e mostram um agradecimento avisando que nada foi enviado. Não há banco nem API no ar.
+
+**Para receber os formulários de verdade (opcional, depois):**
+
 | Parte | Serviço | Observações |
 |---|---|---|
-| Banco | **Neon** (plano Free) | 1 GB por projeto, sem cartão e sem prazo. O banco "dorme" após 5 min parado e acorda sozinho. |
-| API | **Render** (Free, Docker) | Use o `render.yaml`. O serviço dorme após 15 min sem acesso e leva cerca de 1 min para acordar. **Abra `/saude` uns minutos antes da apresentação.** Não use o Postgres gratuito do Render, que expira em 30 dias. |
-| Site | **Cloudflare Pages** ou **Vercel** (Hobby) | Diretório `web`, comando `npm run build`, saída `out`. Defina `NEXT_PUBLIC_API_URL` (URL da API) e `NEXT_PUBLIC_SITE_URL` (URL do site). |
+| Banco | **Neon** (plano Free) | 1 GB por projeto, sem cartão e sem prazo. Região AWS US East 1. Use o endereço sem `-pooler`. O banco "dorme" após 5 min parado e acorda sozinho. |
+| API | **Render** (Free, Docker) | Use o `render.yaml` (New > Blueprint). O serviço dorme após 15 min sem acesso e leva cerca de 1 min para acordar. Não use o Postgres gratuito do Render, que expira em 30 dias. |
 
-Depois de publicar o site, coloque a URL dele em `ALLOWED_ORIGINS` na API. É o que libera o CORS.
+Depois, defina `NEXT_PUBLIC_API_URL` no Cloudflare com o endereço da API e coloque o endereço do site em `ALLOWED_ORIGINS` na API (é o que libera o CORS).
 
 ### Checklist do dia 29/10
 
-- [ ] Acordar a API (`/saude`) e o banco 10 minutos antes.
 - [ ] Abrir `/qr/` no telão e testar o QR com dois celulares diferentes.
 - [ ] Testar a home, o espelho interativo e o Miro em PT, EN e ES.
-- [ ] Enviar um formulário de teste em Contato e conferir se chegou no banco.
+- [ ] Enviar um formulário de teste em Contato e ver o agradecimento.
 - [ ] Ver em `chrome://gpu` se o computador do telão tem aceleração de hardware (senão o espelho usa a versão CSS).
 
 ---
