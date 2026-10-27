@@ -4,7 +4,6 @@ Site de divulgação do **VisaVision**, o espelho inteligente da MiraV.
 
 > *Mais certeza para o cliente, mais resultado para o seu negócio.*
 
-Projeto acadêmico. A apresentação é em **29/10/2026**. Todo o projeto roda **sem custo** (R$ 0).
 
 | Pasta | O que é | Tecnologia |
 |---|---|---|
@@ -12,7 +11,6 @@ Projeto acadêmico. A apresentação é em **29/10/2026**. Todo o projeto roda *
 | `api/` | API: recebe os formulários de Contato e Trabalhe Conosco | Go 1.24 (só biblioteca padrão + `lib/pq`) |
 | `api/internal/db/migrations/` | Tabela dos formulários | PostgreSQL 16 |
 
-> Até 25/10/2026 o site tinha uma página `/espelho` em que uma IA dizia o nome do corte a partir de uma foto. Ela foi retirada antes da publicação para simplificar o projeto. O código antigo continua no primeiro commit do Git.
 
 ---
 
@@ -65,12 +63,6 @@ cd web && npm run lint && npm run build
 
 ---
 
-## Publicar de graça
-
-**Versão acadêmica (a publicada):** só o site, no **Cloudflare Pages** (plano gratuito, sem cartão).
-Diretório `web`, comando `npm run build`, saída `out`. Variáveis: `NEXT_PUBLIC_SITE_URL` (endereço do site, usado no QR code) e `NODE_VERSION=22`.
-Sem `NEXT_PUBLIC_API_URL`, os formulários validam os campos e mostram um agradecimento avisando que nada foi enviado. Não há banco nem API no ar.
-
 **Para receber os formulários de verdade (opcional, depois):**
 
 | Parte | Serviço | Observações |
@@ -79,13 +71,6 @@ Sem `NEXT_PUBLIC_API_URL`, os formulários validam os campos e mostram um agrade
 | API | **Render** (Free, Docker) | Use o `render.yaml` (New > Blueprint). O serviço dorme após 15 min sem acesso e leva cerca de 1 min para acordar. Não use o Postgres gratuito do Render, que expira em 30 dias. |
 
 Depois, defina `NEXT_PUBLIC_API_URL` no Cloudflare com o endereço da API e coloque o endereço do site em `ALLOWED_ORIGINS` na API (é o que libera o CORS).
-
-### Checklist do dia 29/10
-
-- [ ] Abrir `/qr/` no telão e testar o QR com dois celulares diferentes.
-- [ ] Testar a home, o espelho interativo e o Miro em PT, EN e ES.
-- [ ] Enviar um formulário de teste em Contato e ver o agradecimento.
-- [ ] Ver em `chrome://gpu` se o computador do telão tem aceleração de hardware (senão o espelho usa a versão CSS).
 
 ---
 
