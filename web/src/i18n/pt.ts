@@ -285,11 +285,11 @@ export const pt = {
     texto:
       "Nascemos para tirar a incerteza da transformação visual. O VisaVision é o nosso primeiro produto: um espelho que mostra o resultado antes que ele aconteça.",
     pilares: [
-      { titulo: "Missão", texto: "Dar a cada cliente a certeza do resultado antes da transformação." },
+      { titulo: "Missão", texto: "Nossa missão é inovar o setor da beleza com inteligência artificial." },
       { titulo: "Visão", texto: "Ser referência em tecnologia para beleza e estética na América Latina." },
       {
         titulo: "Valores",
-        texto: "Transparência no que é simulação, respeito à privacidade, cuidado com o detalhe e foco no resultado do parceiro.",
+        texto: "A MiraV valoriza o bom atendimento, a inovação, a ética, o trabalho em equipe e a satisfação dos clientes, buscando oferecer soluções personalizadas e construir relações de confiança.",
       },
     ],
     equipeTitulo: "Equipe",
