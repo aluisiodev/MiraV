@@ -4,6 +4,8 @@
 {
   "name": "mirav",
   "compatibility_date": "2026-10-19",
+  // Necessário para os builds de preview (branches fora da main), que rodam "npx wrangler preview"
+  "previews": {},
   "assets": {
     "directory": "./web/out",
     "html_handling": "auto-trailing-slash",
