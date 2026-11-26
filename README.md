@@ -1,8 +1,56 @@
+<div align="center">
+
 # MiraV · VisaVision
 
 Site de divulgação do **VisaVision**, o espelho inteligente da MiraV.
 
-> *Mais certeza para o cliente, mais resultado para o seu negócio.*
+*Mais certeza para o cliente, mais resultado para o seu negócio.*
+
+**[Ver o site no ar](https://mirav.aluisioalves6.workers.dev/)**
+
+![Next.js](https://img.shields.io/badge/Next.js_16-000000?logo=nextdotjs&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_4-06B6D4?logo=tailwindcss&logoColor=white)
+![three.js](https://img.shields.io/badge/three.js-000000?logo=threedotjs&logoColor=white)
+![Go](https://img.shields.io/badge/Go_1.24-00ADD8?logo=go&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL_16-4169E1?logo=postgresql&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
+![Cloudflare Workers](https://img.shields.io/badge/Cloudflare_Workers-F38020?logo=cloudflare&logoColor=white)
+
+<img src="docs/screenshots/home.webp" alt="Home do site da MiraV, com o espelho interativo e o Miro" width="900">
+
+</div>
+
+## Sobre o projeto
+
+Trabalho de curso em equipe: a turma criou a MiraV, uma startup de beleza e tecnologia, e o VisaVision, um espelho
+inteligente que mostra cortes, cores e procedimentos no reflexo do próprio cliente antes do atendimento.
+Eu fui o CTO da equipe e desenvolvi o site e a API sozinho.
+
+**O problema:** em salões e barbearias, o cliente fica em dúvida e muitas vezes desiste de um serviço porque não
+consegue imaginar o resultado. O site apresenta o produto para donos de salão, explica cada modelo de espelho e
+recebe pedidos de demonstração e candidaturas.
+
+**O que dá para ver no site:**
+
+- Espelho interativo na home: troque entre corte, cor, barba e estética e veja a simulação no reflexo.
+- O **Miro**, robozinho em pixel art que explica cada seção e conta onde cada espelho fica melhor.
+- Cinco formatos de espelho em Produtos, página Sobre com missão, visão e valores, e 17 vagas em Trabalhe Conosco.
+- Tema claro e escuro marinho, e o site todo em português, inglês e espanhol.
+- Tela `/qr` para o telão da apresentação, com um QR code que leva à home.
+- Formulários que vão para uma API própria em Go, com validação, limite de envios por visitante e IP anonimizado.
+
+## Telas
+
+| Home (tema claro) | Home (tema escuro) |
+|---|---|
+| ![Home no tema claro](docs/screenshots/home.webp) | ![Home no tema escuro marinho](docs/screenshots/home-escuro.webp) |
+| **Produtos** | **Sobre** |
+| ![Página de produtos com os formatos de espelho](docs/screenshots/produtos.webp) | ![Página sobre com missão, visão e valores](docs/screenshots/sobre.webp) |
+| **Trabalhe Conosco** | **No celular** |
+| ![Página de vagas](docs/screenshots/vagas.webp) | <img src="docs/screenshots/mobile.webp" alt="Home no celular" width="260"> |
+
+## O que tem aqui
 
 
 | Pasta | O que é | Tecnologia |
