@@ -1,0 +1,12 @@
+// Usado só quando o build do Cloudflare roda na raiz do repositório.
+// O site fica em "web": o "npm run build" daqui compila web/ e publica web/out.
+// Mantenha igual a web/wrangler.jsonc.
+{
+  "name": "mirav",
+  "compatibility_date": "2026-10-19",
+  "assets": {
+    "directory": "./web/out",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page"
+  }
+}
