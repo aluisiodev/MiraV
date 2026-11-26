@@ -5,6 +5,8 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "mirav",
   "compatibility_date": "2026-10-19",
+  // Necessário para os builds de preview (branches fora da main), que rodam "npx wrangler preview"
+  "previews": {},
   "assets": {
     "directory": "./out",
     // /sobre abre out/sobre/index.html; endereço inexistente mostra a página 404 do site
